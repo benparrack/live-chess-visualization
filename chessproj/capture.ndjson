@@ -1,0 +1,7 @@
+{"t":"featured","d":{"id":"dNbmkYiY","orientation":"black","players":[{"color":"white","user":{"name":"Avenarrli","title":"CM","flair":"smileys.head-shaking-horizontally","id":"avenarrli"},"rating":2532,"seconds":179},{"color":"black","user":{"name":"Hripach007","title":"IM","flair":"smileys.face-savoring-food","id":"hripach007"},"rating":2754,"seconds":179}],"fen":"rn1q1rk1/1bp1bppp/p3p3/1p1n4/3PNB2/P2BPN2/1PQ2PPP/R4RK1 b - - 0 12"}}
+{"t":"fen","d":{"fen":"rn1q1rk1/1bp1bppp/p3p3/1p6/3PNn2/P2BPN2/1PQ2PPP/R4RK1 w - - 0 13","lm":"d5f4","wc":147,"bc":143}}
+{"t":"fen","d":{"fen":"rn1q1rk1/1bp1bppp/p3p3/1p6/3PNP2/P2B1N2/1PQ2PPP/R4RK1 b - - 0 13","lm":"e3f4","wc":147,"bc":143}}
+{"t":"fen","d":{"fen":"r2q1rk1/1bpnbppp/p3p3/1p6/3PNP2/P2B1N2/1PQ2PPP/R4RK1 w - - 1 14","lm":"b8d7","wc":147,"bc":135}}
+{"t":"fen","d":{"fen":"r2q1rk1/1bpnbppp/p3p3/1p6/3PNP2/P2B1N2/1PQ2PPP/2R2RK1 b - - 2 14","lm":"a1c1","wc":143,"bc":135}}
+{"t":"fen","d":{"fen":"2rq1rk1/1bpnbppp/p3p3/1p6/3PNP2/P2B1N2/1PQ2PPP/2R2RK1 w - - 3 15","lm":"a8c8","wc":143,"bc":133}}
+{"t":"fen","d":{"fen":"2rq1rk1/1bpnbppp/p3p3/1p6/1P1PNP2/P2B1N2/2Q2PPP/2R2RK1 b - - 0 15","lm":"b2b4","wc":140,"bc":133}}

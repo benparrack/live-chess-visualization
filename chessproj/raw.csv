@@ -1,0 +1,8 @@
+event,game_id,fen,last_move,white_clock,black_clock
+featured,dNbmkYiY,rn1q1rk1/1bp1bppp/p3p3/1p1n4/3PNB2/P2BPN2/1PQ2PPP/R4RK1 b - - 0 12,,,
+fen,dNbmkYiY,rn1q1rk1/1bp1bppp/p3p3/1p6/3PNn2/P2BPN2/1PQ2PPP/R4RK1 w - - 0 13,d5f4,147,143
+fen,dNbmkYiY,rn1q1rk1/1bp1bppp/p3p3/1p6/3PNP2/P2B1N2/1PQ2PPP/R4RK1 b - - 0 13,e3f4,147,143
+fen,dNbmkYiY,r2q1rk1/1bpnbppp/p3p3/1p6/3PNP2/P2B1N2/1PQ2PPP/R4RK1 w - - 1 14,b8d7,147,135
+fen,dNbmkYiY,r2q1rk1/1bpnbppp/p3p3/1p6/3PNP2/P2B1N2/1PQ2PPP/2R2RK1 b - - 2 14,a1c1,143,135
+fen,dNbmkYiY,2rq1rk1/1bpnbppp/p3p3/1p6/3PNP2/P2B1N2/1PQ2PPP/2R2RK1 w - - 3 15,a8c8,143,133
+fen,dNbmkYiY,2rq1rk1/1bpnbppp/p3p3/1p6/1P1PNP2/P2B1N2/2Q2PPP/2R2RK1 b - - 0 15,b2b4,140,133
