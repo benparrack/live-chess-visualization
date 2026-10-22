@@ -333,9 +333,22 @@ def wait(seconds):
 
 
 def get_json(url, timeout=15):
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT,
+                                                  "Accept": "application/json"})
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.load(response)
+
+
+def current_game(user_id):
+    """The user's ongoing game id from /current-game, or None if it has ended."""
+    try:
+        game = get_json(f"https://lichess.org/api/user/{user_id}/current-game?moves=false")
+    except Exception:
+        return None   # e.g. 404 for a user with no games yet
+    # This endpoint falls back to the last finished game, so check it's live.
+    if game.get("status") in ("created", "started"):
+        return game.get("id")
+    return None
 
 
 def find_live_game():
@@ -343,6 +356,15 @@ def find_live_game():
     ids = ",".join(FOLLOW_USERS)
     statuses = get_json(f"https://lichess.org/api/users/status?ids={ids}&withGameIds=true")
     playing = {s["id"]: s["playingId"] for s in statuses if s.get("playingId")}
+
+    # Games against the computer (and no-clock games) don't count as "playing"
+    # above, so for anyone online without a playingId, check their latest game.
+    for s in statuses:
+        if s.get("online") and s["id"] not in playing:
+            game = current_game(s["id"])
+            if game:
+                playing[s["id"]] = game
+
     # Prefer the user picked with the joystick, then the rest in list order.
     order = FOLLOW_USERS[user_index:] + FOLLOW_USERS[:user_index]
     for name in order:
