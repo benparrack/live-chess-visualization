@@ -11,6 +11,8 @@ import time
 
 from sense_hat import SenseHat
 
+import sound
+
 # ---------------------------------------------------------------- settings
 
 ROTATION = 180          # set so that pixel (0,0) is your top-left
@@ -62,6 +64,7 @@ sense.low_light = False   # keep the full range; scale in code instead
 
 restart_stream = False
 should_quit = False
+last_status = None   # status screen showing now; None while a board is up
 
 
 def scaled(rgb):
@@ -207,6 +210,8 @@ def path_between(frm, to):
 # ---------------------------------------------------------------- drawing
 
 def board_pixels(board):
+    global last_status
+    last_status = None
     pixels = []
     for i, ch in enumerate(board):
         row, col = divmod(i, 8)
@@ -290,13 +295,24 @@ def show_move(old_board, board, move, white_next):
     frm, to = move
     old_pixels = board_pixels(old_board)
     pixels = board_pixels(board)
-    slide(old_pixels, pixels, frm, to)
-
     captured = captured_piece(old_board, move)
+    in_check = king_in_check(board, white_next)
+
+    moved = old_board[frm]
+    if in_check:
+        sound.play("check")
+    elif moved in ("P", "p") and board[to] not in ("P", "p"):
+        sound.play("promote")
+    elif captured:
+        sound.play("capture")
+    elif moved in ("K", "k") and abs(frm % 8 - to % 8) > 1:
+        sound.play("castle")
+    else:
+        sound.play("move")
+
+    slide(old_pixels, pixels, frm, to)
     if captured:
         shatter(pixels, to, captured)
-
-    in_check = king_in_check(board, white_next)
     if in_check:
         pulse(pixels, [king_square(board, white_next)], CHECK_COLOUR, CHECK_PULSES, CHECK_SECONDS)
     sense.set_pixels(pixels)
@@ -306,6 +322,7 @@ def show_move(old_board, board, move, white_next):
 def new_game_reveal(board):
     """Fade to black, then deal the ranks in from both edges toward the middle."""
     target = board_pixels(board)
+    sound.play("start")
     crossfade([tuple(p) for p in sense.get_pixels()], [OFF] * 64, 0.25)
     frame = [OFF] * 64
     for ring in range(4):
@@ -320,6 +337,7 @@ def show_game_over(board, status, winner):
     """Mark how the game ended on the final position, then hold it."""
     pixels = render(board)
     if winner in ("white", "black"):
+        sound.play("mate" if status == "mate" else "win")
         loser_white = winner == "black"
         loser = king_square(board, loser_white)
         if loser is not None:
@@ -335,6 +353,7 @@ def show_game_over(board, status, winner):
             final[loser] = scaled(LOSS_COLOUR)
         crossfade(pixels, final, 0.6)
     elif status in ("draw", "stalemate"):
+        sound.play("draw")
         kings = [i for i in (king_square(board, True), king_square(board, False)) if i is not None]
         pulse(pixels, kings, DRAW_COLOUR, 3, 1.2)
     wait(END_HOLD_SECONDS)
@@ -375,6 +394,10 @@ def status_frame(kind, step):
 
 
 def show_status(kind):
+    global last_status
+    if kind == "offline" and last_status != "offline":
+        sound.play("offline")   # once when the connection drops, not every retry
+    last_status = kind
     # the step comes from the clock so animations stay smooth across calls
     sense.set_pixels(status_frame(kind, int(time.monotonic() / STATUS_STEP)))
 

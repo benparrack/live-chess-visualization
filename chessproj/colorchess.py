@@ -4,6 +4,7 @@ Live chess on the Sense HAT 8x8 LED matrix.
 
 Streams the featured game from Lichess TV and renders it on the panel.
 Every piece has its own hue: warm for white, cool for black (see panel.py).
+Game events also play sounds through the default audio output (see sound.py).
 
 Usage:
     python3 colorchess.py                  # live stream

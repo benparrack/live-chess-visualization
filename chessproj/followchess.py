@@ -5,6 +5,7 @@ Follow a Lichess player's live game on the Sense HAT 8x8 LED matrix.
 Watches the usernames in FOLLOW_USERS. When one of them starts a game, the
 panel picks it up, shows every move, and goes back to waiting when it ends.
 No Lichess account or token is needed on the Pi.
+Game events also play sounds through the default audio output (see sound.py).
 
 Usage:
     python3 followchess.py                 # wait for FOLLOW_USERS to play
