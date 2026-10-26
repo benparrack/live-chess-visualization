@@ -1,5 +1,5 @@
 import time
-from colorchess import PIECE_COLOURS, sense, scaled
+from panel import PIECE_COLOURS, sense, scaled
 
 order = "PNBRQK"
 pixels = [(0, 0, 0)] * 64
