@@ -4,6 +4,7 @@ Live chess on the Sense HAT 8x8 LED matrix.
 
 Streams the featured game from Lichess TV and renders it on the panel.
 Every piece has its own hue: warm for white, cool for black (see panel.py).
+Each new game is fast-forwarded from its first move, then followed live.
 Game events also play sounds through the default audio output (see sound.py).
 
 Usage:
@@ -27,6 +28,8 @@ import panel
 
 CHANNELS = ["", "bullet", "blitz", "rapid"]   # "" = whatever is featured
 channel_index = 1
+
+REPLAY_STEP = 0.15      # pause between moves when fast-forwarding a new game
 
 
 # ---------------------------------------------------------------- joystick
@@ -63,6 +66,43 @@ def open_stream():
     return urllib.request.urlopen(request, timeout=30)
 
 
+def game_history(game_id, fen):
+    """[(fen, lm), ...] from the start of the game up to `fen`, or [] if unavailable.
+    Lichess's game stream opens with every position so far in one burst."""
+    target = fen.split(" ")[0]
+    url = f"https://lichess.org/api/stream/game/{game_id}"
+    request = urllib.request.Request(url, headers={"User-Agent": panel.USER_AGENT})
+    history = []
+    try:
+        with urllib.request.urlopen(request, timeout=10) as stream:
+            for raw in stream:
+                if not raw.strip():
+                    continue
+                data = json.loads(raw)
+                if "fen" in data and "status" not in data:   # skip the game-info lines
+                    history.append((data["fen"], data.get("lm")))
+                    if data["fen"].split(" ")[0] == target:
+                        return history
+    except Exception as exc:
+        print(f"history error: {exc}", file=sys.stderr)
+    return []   # never reached the featured position; just show it as it is
+
+
+def fast_forward(history):
+    """Play a game's moves from the starting position, quicker than live."""
+    board = panel.expand_fen(history[0][0])
+    panel.new_game_reveal(board)
+    for fen, lm in history[1:]:
+        if panel.restart_stream or panel.should_quit:
+            return
+        new_board = panel.expand_fen(fen)
+        move = panel.parse_last_move(lm)
+        if new_board and move and new_board != board:
+            panel.show_move(board, new_board, move, panel.white_to_move(fen))
+            time.sleep(REPLAY_STEP)
+        board = new_board or board
+
+
 def handle_event(data, state):
     """Process one decoded line from the feed. Returns the updated state."""
     kind = data.get("t")
@@ -80,7 +120,13 @@ def handle_event(data, state):
                 winner = "black" if state.get("white_to_move", True) else "white"
                 panel.show_game_over(prev_board, "mate", winner)
 
-            panel.new_game_reveal(board)
+            # Featured games are usually already underway, so start from move 1.
+            history = game_history(payload["id"], payload["fen"]) if state.get("fast_forward") else []
+            if len(history) > 1:
+                fast_forward(history)
+                panel.render(board)
+            else:
+                panel.new_game_reveal(board)
             state["board"] = board
             state["in_check"] = False
 
@@ -110,7 +156,7 @@ def run_live():
         panel.restart_stream = False
         # Fresh state per connection, so a reconnect or channel switch
         # can't be mistaken for the end of a game in check.
-        state = {"board": None}
+        state = {"board": None, "fast_forward": True}
         panel.show_status("connecting")
         try:
             with open_stream() as stream:
