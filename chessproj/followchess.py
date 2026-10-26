@@ -19,7 +19,9 @@ Joystick:
 """
 
 import json
+import queue
 import sys
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -31,7 +33,7 @@ import panel
 FOLLOW_USERS = ["datavis"]   # Lichess usernames to watch, any number
 user_index = 0               # which one wins if several are playing at once
 
-POLL_SECONDS = 5        # how often to ask "is anyone playing?" while idle
+POLL_SECONDS = 5        # how often to ask "is anyone playing (something new)?"
 STREAM_TIMEOUT = 90     # a quiet game stream reconnects after this long
 CATCHUP_GAP = 0.4       # stream lines closer together than this are history
 
@@ -132,8 +134,35 @@ def handle_line(data, state, live):
     return False
 
 
-def follow_game(game_id):
-    """Stream one game until it ends. Returns True if it finished normally."""
+def read_stream(stream, lines):
+    """Background reader, so the main loop isn't stuck while a game is quiet.
+    Lines are timestamped on arrival, before any slow animation runs."""
+    try:
+        for raw in stream:
+            lines.put((time.monotonic(), raw))
+        lines.put((time.monotonic(), None))   # stream closed
+    except Exception as exc:
+        lines.put((time.monotonic(), exc))
+
+
+def switched_game(game_id):
+    """A different live game for the followed users, or None."""
+    try:
+        found = find_live_game()
+    except Exception:
+        return None   # a failed check isn't a reason to drop the game
+    if found and found[1] != game_id:
+        return found
+    return None
+
+
+def follow_game(game_id, watch_users=True):
+    """Stream one game. Returns True once done with it, so it isn't picked again.
+
+    With watch_users, it also gives up the game when a followed user is in a
+    different one -- an unfinished game (a bot game nobody resigned) never ends
+    on its own, and its stream just sits there sending a keep-alive every ~50s.
+    """
     state = {"board": None}
     while not panel.should_quit and not panel.restart_stream:
         url = f"https://lichess.org/api/stream/game/{game_id}"
@@ -141,36 +170,59 @@ def follow_game(game_id):
         if state["board"] is None:
             panel.show_status("connecting")
         try:
-            with urllib.request.urlopen(request, timeout=STREAM_TIMEOUT) as stream:
-                # Every connect starts with the whole move history in one quick
-                # burst. The first pause between lines marks the switch to live.
-                live = False
-                last = None
-                for raw in stream:
-                    if panel.restart_stream or panel.should_quit:
-                        return False
-                    now = time.monotonic()
-                    if last is not None and now - last > CATCHUP_GAP:
-                        live = True
-                    last = now
-                    line = raw.decode("utf-8").strip()
-                    if not line:
-                        continue
-                    try:
-                        if handle_line(json.loads(line), state, live):
-                            return True
-                    except (ValueError, KeyError, IndexError):
-                        continue  # skip a bad line, keep the display alive
+            stream = urllib.request.urlopen(request, timeout=STREAM_TIMEOUT)
         except Exception as exc:
-            # Includes the timeout during a long think; reconnecting is harmless.
             print(f"stream error: {exc}", file=sys.stderr)
             panel.wait(3, "offline")
+            continue
+
+        lines = queue.Queue()
+        threading.Thread(target=read_stream, args=(stream, lines), daemon=True).start()
+        # Every connect starts with the whole move history in one quick
+        # burst. The first pause between lines marks the switch to live.
+        live = False
+        last = None
+        next_check = time.monotonic() + POLL_SECONDS
+        try:
+            while True:
+                if panel.restart_stream or panel.should_quit:
+                    return False
+                if watch_users and time.monotonic() >= next_check:
+                    other = switched_game(game_id)
+                    if other:
+                        print(f"{other[0]} is in a new game, leaving {game_id}")
+                        return True
+                    next_check = time.monotonic() + POLL_SECONDS
+                try:
+                    arrived, raw = lines.get(timeout=0.1)
+                except queue.Empty:
+                    continue
+                if raw is None:
+                    break   # closed without an ending; reconnect
+                if isinstance(raw, Exception):
+                    # Includes the timeout during a long think; reconnecting is harmless.
+                    print(f"stream error: {raw}", file=sys.stderr)
+                    panel.wait(3, "offline")
+                    break
+                if last is not None and arrived - last > CATCHUP_GAP:
+                    live = True
+                last = arrived
+                line = raw.decode("utf-8").strip()
+                if not line:
+                    continue
+                try:
+                    if handle_line(json.loads(line), state, live):
+                        return True
+                except (ValueError, KeyError, IndexError):
+                    continue  # skip a bad line, keep the display alive
+        finally:
+            stream.close()   # the reader thread then ends on its own
     return False
 
 
 def run_follow():
     """Wait for a followed user to start a game, show it, repeat."""
-    finished = set()   # status can still say "playing" for a moment after the end
+    finished = set()   # ended (status can say "playing" for a moment after) or left for a newer game
     panel.show_status("connecting")
     while not panel.should_quit:
         panel.restart_stream = False
@@ -195,7 +247,7 @@ def run_single(game_id):
     print(f"following https://lichess.org/{game_id}")
     while not panel.should_quit:
         panel.restart_stream = False
-        if follow_game(game_id):
+        if follow_game(game_id, watch_users=False):
             break
     while not panel.should_quit:
         time.sleep(0.2)
