@@ -6,7 +6,7 @@ on the Sense HAT 8x8 LED matrix.
     python3 openings_server.py
     then open  http://ryanpi.local:8000  on a phone or laptop on the same Wi-Fi
 
-No extra packages needed beyond sense_hat (standard library web server).
+Needs: sense_hat and python-chess   (sudo apt install -y python3-chess)
 Colours match lichess.py: amber = white pieces, blue = black pieces,
 brightness = piece value, white flash = the square a piece just moved to.
 """
@@ -16,6 +16,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import chess
 from sense_hat import SenseHat
 
 # ---------------------------------------------------------------- settings
@@ -34,82 +35,85 @@ BLACK_TINT = (0.35, 0.65, 1.00)
 FLASH_TO = (255, 255, 255)
 FLASH_FROM = (70, 70, 60)
 
-# (id, name, group, moves in UCI, moves in SAN for display)
-# To add one: copy a line and type the moves as from-square + to-square.
-OPENINGS = [
+# (id, name, group, moves in normal chess notation)
+# To add one: copy a line and paste the moves from Lichess, Wikipedia, etc.
+# Move numbers like "1." are fine to leave in. A typo stops the server at
+# startup and tells you which move is wrong.
+OPENING_LINES = [
     ("italian", "Italian Game", "1.e4",
-     "e2e4 e7e5 g1f3 b8c6 f1c4 f8c5",
-     "e4 e5 Nf3 Nc6 Bc4 Bc5"),
+     "e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d3 d6 O-O O-O Re1 a6 Bb3 Ba7 h3 h6 Nbd2 Re8"),
     ("ruy", "Ruy Lopez", "1.e4",
-     "e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1",
-     "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O"),
+     "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7 Re1 b5 Bb3 d6 c3 O-O h3 Na5 Bc2 c5 d4 Qc7"),
     ("kingsgambit", "King's Gambit", "1.e4",
-     "e2e4 e7e5 f2f4 e5f4",
-     "e4 e5 f4 exf4"),
+     "e4 e5 f4 exf4 Nf3 g5 h4 g4 Ne5 Nf6 d4 d6 Nd3 Nxe4 Bxf4 Bg7 c3 Qe7 Qe2 Bf5"),
     ("friedliver", "Fried Liver Attack", "1.e4",
-     "e2e4 e7e5 g1f3 b8c6 f1c4 g8f6 f3g5 d7d5 e4d5 f6d5 g5f7 e8f7",
-     "e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 Nxf7 Kxf7"),
+     "e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 Nxf7 Kxf7 Qf3+ Ke6 Nc3 Ncb4 a3 Nxc2+ Kd1 Nxa1 Nxd5 Qh4"),
     ("scholars", "Scholar's Mate", "1.e4",
-     "e2e4 e7e5 f1c4 b8c6 d1h5 g8f6 h5f7",
      "e4 e5 Bc4 Nc6 Qh5 Nf6 Qxf7#"),
     ("najdorf", "Sicilian Najdorf", "1.e4",
-     "e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6",
-     "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6"),
+     "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Be3 e5 Nb3 Be6 f3 Be7 Qd2 O-O O-O-O Nbd7 g4 b5"),
     ("french", "French Defense", "1.e4",
-     "e2e4 e7e6 d2d4 d7d5 b1c3 g8f6",
-     "e4 e6 d4 d5 Nc3 Nf6"),
+     "e4 e6 d4 d5 Nc3 Nf6 Bg5 Be7 e5 Nfd7 Bxe7 Qxe7 f4 O-O Nf3 c5 Qd2 Nc6 O-O-O c4"),
     ("caro", "Caro-Kann", "1.e4",
-     "e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 c8f5",
-     "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5"),
+     "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5 Ng3 Bg6 h4 h6 Nf3 Nd7 h5 Bh7 Bd3 Bxd3 Qxd3 e6 Bd2 Ngf6 O-O-O Be7"),
     ("scandi", "Scandinavian", "1.e4",
-     "e2e4 d7d5 e4d5 d8d5 b1c3 d5a5",
-     "e4 d5 exd5 Qxd5 Nc3 Qa5"),
+     "e4 d5 exd5 Qxd5 Nc3 Qa5 d4 Nf6 Nf3 c6 Bc4 Bf5 Bd2 e6 Nd5 Qd8 Nxf6+ Qxf6 Qe2 Nd7"),
     ("qgd", "Queen's Gambit Declined", "1.d4",
-     "d2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7",
-     "d4 d5 c4 e6 Nc3 Nf6 Bg5 Be7"),
+     "d4 d5 c4 e6 Nc3 Nf6 Bg5 Be7 e3 O-O Nf3 Nbd7 Rc1 c6 Bd3 dxc4 Bxc4 Nd5 Bxe7 Qxe7 O-O Nxc3 Rxc3 e5"),
     ("qga", "Queen's Gambit Accepted", "1.d4",
-     "d2d4 d7d5 c2c4 d5c4 g1f3 g8f6 e2e3",
-     "d4 d5 c4 dxc4 Nf3 Nf6 e3"),
+     "d4 d5 c4 dxc4 Nf3 Nf6 e3 e6 Bxc4 c5 O-O a6 dxc5 Qxd1 Rxd1 Bxc5 Kf1 b5 Be2 Bb7"),
     ("kid", "King's Indian", "1.d4",
-     "d2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8",
-     "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O"),
+     "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O Be2 e5 O-O Nc6 d5 Ne7 Ne1 Nd7 Nd3 f5 Bd2 Nf6 f3 f4"),
     ("london", "London System", "1.d4",
-     "d2d4 d7d5 c1f4 g8f6 e2e3 e7e6 g1f3 c7c5",
-     "d4 d5 Bf4 Nf6 e3 e6 Nf3 c5"),
+     "d4 d5 Bf4 Nf6 e3 e6 Nf3 c5 c3 Nc6 Nbd2 Bd6 Bg3 O-O Bd3 b6 Ne5 Bb7 f4 Ne7"),
     ("english", "English Opening", "Other",
-     "c2c4 e7e5 b1c3 g8f6 g1f3 b8c6",
-     "c4 e5 Nc3 Nf6 Nf3 Nc6"),
+     "c4 e5 Nc3 Nf6 Nf3 Nc6 g3 d5 cxd5 Nxd5 Bg2 Nb6 O-O Be7 d3 O-O a3 Be6 b4 f6"),
 ]
-OPENINGS = {o[0]: {"id": o[0], "name": o[1], "group": o[2],
-                   "uci": o[3].split(), "san": o[4].split()} for o in OPENINGS}
 
 # ---------------------------------------------------------------- board logic
 
-START = list("rnbqkbnr" "pppppppp" + "." * 32 + "PPPPPPPP" "RNBQKBNR")  # index 0 = a8
+SKIP = {"...", "1-0", "0-1", "1/2-1/2", "*"}
 
 
-def sq(name):
-    return (8 - int(name[1])) * 8 + ord(name[0]) - ord("a")
+def parse_line(name, text):
+    """'1. e4 e5 2. Nf3 ...' -> (list of chess.Move, list of SAN strings)."""
+    board = chess.Board()
+    moves, san = [], []
+    for token in text.replace(".", ". ").split():
+        if token.rstrip(".").isdigit() or token in SKIP:
+            continue
+        try:
+            move = board.parse_san(token)
+        except ValueError:
+            played = " ".join(san) or "(start)"
+            raise SystemExit(f"{name}: '{token}' isn't a legal move after: {played}")
+        san.append(board.san(move))
+        moves.append(move)
+        board.push(move)
+    return moves, san
 
 
-def apply_move(board, uci):
-    """Play one UCI move on a 64-char board, handling castling and en passant."""
-    b = board[:]
-    f, t = sq(uci[:2]), sq(uci[2:4])
-    piece = b[f]
-    if piece in "Pp" and f % 8 != t % 8 and b[t] == ".":      # en passant
-        b[f - f % 8 + t % 8] = "."
-    if piece in "Kk" and abs(f % 8 - t % 8) == 2:              # castling
-        row = f - f % 8
-        if t % 8 == 6:
-            b[row + 5], b[row + 7] = b[row + 7], "."
-        else:
-            b[row + 3], b[row] = b[row], "."
-    b[t], b[f] = piece, "."
-    if len(uci) == 5:                                          # promotion
-        b[t] = uci[4].upper() if piece.isupper() else uci[4]
-    return b, (f, t)
+OPENINGS = {}
+for _id, _name, _group, _text in OPENING_LINES:
+    _moves, _san = parse_line(_name, _text)
+    OPENINGS[_id] = {"id": _id, "name": _name, "group": _group,
+                     "moves": _moves, "san": _san}
 
+
+def idx(square):
+    """python-chess square (a1 = 0) -> panel index (a8 = 0)."""
+    return (7 - chess.square_rank(square)) * 8 + chess.square_file(square)
+
+
+def board_chars(board):
+    """chess.Board -> list of 64 chars, index 0 = a8, '.' = empty."""
+    out = ["."] * 64
+    for square, piece in board.piece_map().items():
+        out[idx(square)] = piece.symbol()
+    return out
+
+
+START = board_chars(chess.Board())
 
 # ---------------------------------------------------------------- LEDs
 
@@ -170,14 +174,16 @@ def wait(seconds, my_job):
 
 def play(opening_id, delay, my_job):
     op = OPENINGS[opening_id]
-    board = START[:]
-    set_state(opening=opening_id, ply=0, total=len(op["uci"]), playing=True,
-              board="".join(board), last=None)
-    render(board)
+    set_state(opening=opening_id, ply=0, total=len(op["moves"]), playing=True,
+              board="".join(START), last=None)
+    render(START)
     if not wait(delay, my_job):
         return
-    for i, mv in enumerate(op["uci"]):
-        board, (f, t) = apply_move(board, mv)
+    game = chess.Board()
+    for i, move in enumerate(op["moves"]):
+        game.push(move)
+        board = board_chars(game)
+        f, t = idx(move.from_square), idx(move.to_square)
         set_state(ply=i + 1, board="".join(board), last=[f, t])
         render(board, (f, t))
         if not wait(FLASH_SECONDS, my_job):
@@ -215,7 +221,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/":
             self.send(PAGE, "text/html; charset=utf-8")
         elif self.path == "/api/openings":
-            self.send(json.dumps(list(OPENINGS.values())))
+            public = [{k: v for k, v in o.items() if k != "moves"} for o in OPENINGS.values()]
+            self.send(json.dumps(public))
         elif self.path == "/api/state":
             with lock:
                 self.send(json.dumps(state))
@@ -343,7 +350,8 @@ async function init() {
       b.className = "op"; b.dataset.id = o.id;
       b.innerHTML = `<b></b><span></span>`;
       b.querySelector("b").textContent = o.name;
-      b.querySelector("span").textContent = o.san.slice(0, 4).join(" ") + (o.san.length > 4 ? " …" : "");
+      b.querySelector("span").textContent =
+        o.san.slice(0, 4).join(" ") + " …  · " + Math.ceil(o.san.length / 2) + " moves";
       b.onclick = () => play(o.id);
       grid.append(b);
     }
