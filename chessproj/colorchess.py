@@ -61,33 +61,33 @@ def feed_url():
     return "https://lichess.org/api/tv/feed"
 
 
-def open_stream():
-    request = urllib.request.Request(feed_url(), headers={"User-Agent": panel.USER_AGENT})
-    return urllib.request.urlopen(request, timeout=30)
-
-
 def game_history(game_id, fen):
-    """[(fen, lm), ...] from the start of the game up to `fen`, or [] if unavailable.
-    Lichess's game stream opens with every position so far in one burst."""
+    """[(fen, lm), ...] from the start of the game up to about `fen`, or [] if
+    unavailable. Lichess's game stream opens with every position so far in one
+    burst; it can trail the TV feed by a move or two, and the caller draws `fen`
+    after replaying this anyway, so there's no need to wait for it to catch up."""
     target = fen.split(" ")[0]
     url = f"https://lichess.org/api/stream/game/{game_id}"
     request = urllib.request.Request(url, headers={"User-Agent": panel.USER_AGENT})
     history = []
     try:
-        with urllib.request.urlopen(request, timeout=10) as stream:
-            for raw in stream:
-                if panel.restart_stream or panel.should_quit:
-                    return []
-                if not raw.strip():
-                    continue
-                data = json.loads(raw)
-                if "fen" in data and "status" not in data:   # skip the game-info lines
-                    history.append((data["fen"], data.get("lm")))
-                    if data["fen"].split(" ")[0] == target:
-                        return history
+        for _, raw in panel.read_lines(request, 10):
+            if panel.restart_stream or panel.should_quit:
+                return []
+            if raw is None:
+                if history:
+                    return history   # the opening burst is over
+                continue
+            if not raw.strip():
+                continue
+            data = json.loads(raw)
+            if "fen" in data and "status" not in data:   # skip the game-info lines
+                history.append((data["fen"], data.get("lm")))
+                if data["fen"].split(" ")[0] == target:
+                    return history
     except Exception as exc:
         print(f"history error: {exc}", file=sys.stderr)
-    return []   # never reached the featured position; just show it as it is
+    return history
 
 
 def fast_forward(history):
@@ -161,17 +161,19 @@ def run_live():
         state = {"board": None, "fast_forward": True}
         panel.show_status("connecting")
         try:
-            with open_stream() as stream:
-                for raw in stream:
-                    if panel.restart_stream:
-                        break
-                    line = raw.decode("utf-8").strip()
-                    if not line:
-                        continue
-                    try:
-                        state = handle_event(json.loads(line), state)
-                    except (ValueError, KeyError, IndexError):
-                        continue  # skip a bad line, keep the display alive
+            request = urllib.request.Request(feed_url(), headers={"User-Agent": panel.USER_AGENT})
+            for _, raw in panel.read_lines(request, 30):
+                if panel.restart_stream:
+                    break
+                if raw is None:
+                    continue   # nothing new yet
+                line = raw.decode("utf-8").strip()
+                if not line:
+                    continue
+                try:
+                    state = handle_event(json.loads(line), state)
+                except (ValueError, KeyError, IndexError):
+                    continue  # skip a bad line, keep the display alive
         except Exception as exc:
             print(f"stream error: {exc}", file=sys.stderr)
             panel.wait(3, "offline")  # back off, then reconnect
@@ -206,4 +208,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     finally:
-        panel.sense.clear()
+        panel.clear()

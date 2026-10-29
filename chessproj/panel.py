@@ -7,7 +7,11 @@ this. Each sets its own left/right joystick handlers; up/down/middle live here.
 """
 
 import math
+import queue
+import socket
+import threading
 import time
+import urllib.request
 
 from sense_hat import SenseHat
 
@@ -65,14 +69,11 @@ sense.low_light = False   # keep the full range; scale in code instead
 restart_stream = False
 should_quit = False
 last_status = None   # status screen showing now; None while a board is up
+draw_lock = threading.Lock()   # the status animation thread vs. everything else drawing
 
 
 def scaled(rgb):
     return tuple(max(0, min(255, int(c * BRIGHTNESS))) for c in rgb)
-
-
-def piece_colour(ch):
-    return PIECE_COLOURS[ch]
 
 
 def mix(a, b, t):
@@ -211,14 +212,15 @@ def path_between(frm, to):
 
 def board_pixels(board):
     global last_status
-    last_status = None
+    with draw_lock:
+        last_status = None   # stops the status animation before a board is drawn
     pixels = []
     for i, ch in enumerate(board):
         row, col = divmod(i, 8)
         if ch == ".":
             rgb = LIGHT_SQUARE if (row + col) % 2 == 0 else DARK_SQUARE
         else:
-            rgb = piece_colour(ch)
+            rgb = PIECE_COLOURS[ch]
         pixels.append(scaled(rgb))
     return pixels
 
@@ -280,7 +282,7 @@ def shatter(pixels, index, captured):
     ring = [(row + dr) * 8 + col + dc
             for dr in (-1, 0, 1) for dc in (-1, 0, 1)
             if (dr or dc) and 0 <= row + dr < 8 and 0 <= col + dc < 8]
-    colour = scaled(piece_colour(captured))
+    colour = scaled(PIECE_COLOURS[captured])
     steps = 6
     for k in range(steps + 1):
         frame = list(pixels)
@@ -330,7 +332,6 @@ def new_game_reveal(board):
             frame[row * 8:row * 8 + 8] = target[row * 8:row * 8 + 8]
         sense.set_pixels(frame)
         time.sleep(0.09)
-    return target
 
 
 def show_game_over(board, status, winner):
@@ -393,22 +394,118 @@ def status_frame(kind, step):
     return pixels
 
 
+def draw_status():
+    # the step comes from the clock so animations stay smooth across calls
+    sense.set_pixels(status_frame(last_status, int(time.monotonic() / STATUS_STEP)))
+
+
 def show_status(kind):
+    """Put up a status screen; it keeps animating until a board is drawn."""
     global last_status
     if kind == "offline" and last_status != "offline":
         sound.play("offline")   # once when the connection drops, not every retry
-    last_status = kind
-    # the step comes from the clock so animations stay smooth across calls
-    sense.set_pixels(status_frame(kind, int(time.monotonic() / STATUS_STEP)))
+    with draw_lock:
+        last_status = kind
+        draw_status()
+
+
+def animate_status():
+    # Runs on its own thread, so the screen keeps moving while the main
+    # thread is stuck in a network call.
+    while True:
+        time.sleep(STATUS_STEP)
+        with draw_lock:
+            if last_status:
+                draw_status()
 
 
 def wait(seconds, status=None):
-    """Sleep in small steps so the joystick stays responsive, animating `status`."""
+    """Sleep in small steps so the joystick stays responsive, showing `status`."""
+    if status:
+        show_status(status)
     end = time.monotonic() + seconds
     while time.monotonic() < end and not should_quit and not restart_stream:
-        if status:
-            show_status(status)
         time.sleep(STATUS_STEP)
+
+
+def clear():
+    """Blank the panel for good, stopping any status animation first."""
+    global last_status
+    with draw_lock:
+        last_status = None
+        sense.clear()
+
+
+# ---------------------------------------------------------------- streams
+
+def background(fn, *args):
+    """Run a blocking call (a web request) on a helper thread and wait for it in
+    STATUS_STEP slices, so a joystick press isn't held up behind it. Returns its
+    result, or None if the joystick asked to switch or quit first; raises its errors."""
+    result = queue.Queue()
+
+    def run():
+        try:
+            result.put((fn(*args), None))
+        except Exception as exc:
+            result.put((None, exc))
+
+    threading.Thread(target=run, daemon=True).start()
+    while not (should_quit or restart_stream):
+        try:
+            value, error = result.get(timeout=STATUS_STEP)
+        except queue.Empty:
+            continue
+        if error:
+            raise error
+        return value
+    return None
+
+
+def read_lines(request, timeout):
+    """Open a Lichess stream and yield (arrival_time, line) from it. Connecting
+    and reading both happen off the main thread so the joystick never waits on
+    the network: while nothing arrives this yields (now, None) every STATUS_STEP.
+    Ends when the stream closes or the joystick interrupts the connect; raises
+    connection and read errors (including the read timeout)."""
+    stream = background(lambda: urllib.request.urlopen(request, timeout=timeout))
+    if stream is None:
+        return
+    lines = queue.Queue()
+
+    def reader():
+        try:
+            for raw in stream:
+                lines.put((time.monotonic(), raw))   # timestamped before any slow animation
+            lines.put((time.monotonic(), None))
+        except Exception as exc:
+            lines.put((time.monotonic(), exc))
+        finally:
+            stream.close()
+
+    threading.Thread(target=reader, daemon=True).start()
+    try:
+        while True:
+            try:
+                arrived, raw = lines.get(timeout=STATUS_STEP)
+            except queue.Empty:
+                yield time.monotonic(), None
+                continue
+            if raw is None:
+                return
+            if isinstance(raw, Exception):
+                raise raw
+            yield arrived, raw
+    finally:
+        # Closing the stream from here would wait for the reader's blocked read
+        # to finish; shutting the socket down ends that read now instead, and
+        # the reader then closes the stream.
+        # shortcut: reaches into urllib's private socket; without it the stream
+        # still closes, just at its next line or timeout.
+        try:
+            stream.fp.raw._sock.shutdown(socket.SHUT_RDWR)
+        except (AttributeError, OSError):
+            pass
 
 
 # ---------------------------------------------------------------- joystick
@@ -435,3 +532,5 @@ def on_middle(event):
 sense.stick.direction_up = on_up
 sense.stick.direction_down = on_down
 sense.stick.direction_middle = on_middle
+
+threading.Thread(target=animate_status, daemon=True).start()

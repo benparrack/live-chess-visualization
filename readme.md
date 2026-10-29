@@ -60,19 +60,26 @@ python3 pisim.py colorchess.py
 
 This streams Lichess TV over the internet, starting with the bullet channel. Connection errors appear in the terminal, and the program retries automatically.
 
+To switch between Lichess TV (`colorchess.py`) and following our own live game (`followchess.py`, set the username in `FOLLOW_USERS`) with Left / Right, run the menu instead:
+
+```sh
+python3 pisim.py menu.py      # simulator
+python3 menu.py               # on the Pi
+```
+
 ## Controls
 
 Focus the simulator window to use the keyboard:
 
 | Key | Action |
 | --- | --- |
-| Left / Right | Cycle live TV channels: featured, bullet, blitz, rapid |
+| Left / Right | `menu.py`: switch between TV and our game. `colorchess.py` alone: cycle TV channels (featured, bullet, blitz, rapid) |
 | Up / Down | Increase / decrease brightness |
 | Enter | Clear the LEDs and ask the chess program to quit |
 | r | Restart the program |
 | Close window | Stop the simulator and the chess program |
 
-Channel changes apply to live mode. Changes and quitting can wait for the next stream event or timeout; closing the window stops the child directly. Brightness changes appear on the next rendered frame.
+Channel and mode changes take effect within a fraction of a second, even while a network request is still connecting. Brightness changes appear on the next rendered frame.
 
 Saving a top-level `.py` file in `chessproj/` or editing `chessproj/sim/sense_hat.py` automatically restarts the program.
 

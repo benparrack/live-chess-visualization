@@ -134,17 +134,6 @@ def handle_line(data, state, live):
     return False
 
 
-def read_stream(stream, lines):
-    """Background reader, so the main loop isn't stuck while a game is quiet.
-    Lines are timestamped on arrival, before any slow animation runs."""
-    try:
-        for raw in stream:
-            lines.put((time.monotonic(), raw))
-        lines.put((time.monotonic(), None))   # stream closed
-    except Exception as exc:
-        lines.put((time.monotonic(), exc))
-
-
 def switched_game(game_id):
     """A different live game for the followed users, or None."""
     try:
@@ -169,41 +158,33 @@ def follow_game(game_id, watch_users=True):
         request = urllib.request.Request(url, headers={"User-Agent": panel.USER_AGENT})
         if state["board"] is None:
             panel.show_status("connecting")
-        try:
-            stream = urllib.request.urlopen(request, timeout=STREAM_TIMEOUT)
-        except Exception as exc:
-            print(f"stream error: {exc}", file=sys.stderr)
-            panel.wait(3, "offline")
-            continue
-
-        lines = queue.Queue()
-        threading.Thread(target=read_stream, args=(stream, lines), daemon=True).start()
         # Every connect starts with the whole move history in one quick
         # burst. The first pause between lines marks the switch to live.
         live = False
         last = None
         next_check = time.monotonic() + POLL_SECONDS
+        # The "new game?" check runs on its own thread: its requests can take
+        # seconds, and the joystick would wait on them.
+        checks = queue.Queue()
+        checking = False
         try:
-            while True:
+            # The loop ending means the stream closed without an ending; reconnect.
+            for arrived, raw in panel.read_lines(request, STREAM_TIMEOUT):
                 if panel.restart_stream or panel.should_quit:
                     return False
-                if watch_users and time.monotonic() >= next_check:
-                    other = switched_game(game_id)
+                if watch_users and not checking and time.monotonic() >= next_check:
+                    checking = True
+                    threading.Thread(target=lambda: checks.put(switched_game(game_id)),
+                                     daemon=True).start()
+                elif checking and not checks.empty():
+                    checking = False
+                    next_check = time.monotonic() + POLL_SECONDS
+                    other = checks.get()
                     if other:
                         print(f"{other[0]} is in a new game, leaving {game_id}")
                         return True
-                    next_check = time.monotonic() + POLL_SECONDS
-                try:
-                    arrived, raw = lines.get(timeout=0.1)
-                except queue.Empty:
-                    continue
                 if raw is None:
-                    break   # closed without an ending; reconnect
-                if isinstance(raw, Exception):
-                    # Includes the timeout during a long think; reconnecting is harmless.
-                    print(f"stream error: {raw}", file=sys.stderr)
-                    panel.wait(3, "offline")
-                    break
+                    continue   # nothing new yet
                 if last is not None and arrived - last > CATCHUP_GAP:
                     live = True
                 last = arrived
@@ -215,8 +196,10 @@ def follow_game(game_id, watch_users=True):
                         return True
                 except (ValueError, KeyError, IndexError):
                     continue  # skip a bad line, keep the display alive
-        finally:
-            stream.close()   # the reader thread then ends on its own
+        except Exception as exc:
+            # Includes the timeout during a long think; reconnecting is harmless.
+            print(f"stream error: {exc}", file=sys.stderr)
+            panel.wait(3, "offline")
     return False
 
 
@@ -227,7 +210,7 @@ def run_follow():
     while not panel.should_quit:
         panel.restart_stream = False
         try:
-            found = find_live_game()
+            found = panel.background(find_live_game)   # None if the joystick cut in
         except Exception as exc:
             print(f"status error: {exc}", file=sys.stderr)
             panel.wait(POLL_SECONDS, "offline")
@@ -264,4 +247,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     finally:
-        panel.sense.clear()
+        panel.clear()
