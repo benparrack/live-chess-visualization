@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Opening explorer: a web page of opening buttons that plays the chosen line
-on the Sense HAT 8x8 LED matrix, with a description and move-by-move notes.
+Opening explorer: a web page of opening and famous-game buttons that plays the
+chosen line on the Sense HAT 8x8 LED matrix, with a description and move notes.
 
     python3 openings_server.py
     then open  http://ryanpi.local:8000  on a phone or laptop on the same Wi-Fi
@@ -23,15 +23,29 @@ from sense_hat import SenseHat
 
 PORT = 8000
 ROTATION = 180            # same as lichess.py; change if the board looks flipped
-BRIGHTNESS = 1.0
+BRIGHTNESS = 0.6
 FLASH_SECONDS = 0.35
 DEFAULT_DELAY = 1.2       # seconds between moves (the page slider overrides this)
 
-LIGHT_SQUARE = (45, 38, 22)
+# Same palette as panel.py on main: every piece has its own hue
+LIGHT_SQUARE = (26, 26, 28)
 DARK_SQUARE = (0, 0, 0)
-VALUE = {"p": 95, "n": 135, "b": 135, "r": 175, "q": 255, "k": 210}
-WHITE_TINT = (1.00, 0.72, 0.28)
-BLACK_TINT = (0.35, 0.65, 1.00)
+PIECE_COLOURS = {
+    # white side: warm hues
+    "P": (140, 100, 55),     # dim brown
+    "N": (255, 100, 0),      # orange
+    "B": (255, 215, 4),      # gold/yellow
+    "R": (230, 20, 20),      # red
+    "Q": (255, 175, 120),    # peach
+    "K": (255, 55, 140),     # pink
+    # black side: cool hues
+    "p": (40, 55, 115),      # dim slate
+    "n": (192, 209, 0),      # yellow-green
+    "b": (30, 200, 85),      # green
+    "r": (45, 55, 255),      # blue
+    "q": (0, 228, 217),      # cyan
+    "k": (190, 70, 255),     # purple
+}
 FLASH_TO = (255, 255, 255)
 FLASH_FROM = (70, 70, 60)
 
@@ -278,6 +292,129 @@ OPENING_LINES = [
     },
 ]
 
+# ---------------------------------------------------------------- famous games
+#
+# Same format as the openings, plus who played, the year and the result.
+
+GAME_LINES = [
+    {
+        "id": "opera", "name": "The Opera Game", "group": "Romantic era",
+        "players": "Morphy vs. Duke of Brunswick & Count Isouard", "year": 1858, "result": "1-0",
+        "moves": "e4 e5 Nf3 d6 d4 Bg4 dxe5 Bxf3 Qxf3 dxe5 Bc4 Nf6 Qb3 Qe7 Nc3 c6 Bg5 b5 "
+                 "Nxb5 cxb5 Bxb5+ Nbd7 O-O-O Rd8 Rxd7 Rxd7 Rd1 Qe6 Bxd7+ Nxd7 Qb8+ Nxb8 Rd8#",
+        "about": "Paul Morphy played this in 1858 in a box at the Paris opera, against the Duke of "
+                 "Brunswick and Count Isouard consulting together. It's the classic lesson in "
+                 "development: Morphy gets every piece into the game while his opponents waste "
+                 "time, then finishes with a queen sacrifice.",
+        "notes": {
+            "3...Bg4": "Pins the knight, but Black will soon have to give this bishop up for it.",
+            "4...Bxf3": "Practically forced: 4...dxe5 loses a pawn after the queen trade and Nxe5.",
+            "7.Qb3": "Lines up behind the bishop against f7, and attacks b7 at the same time.",
+            "7...Qe7": "Defends f7, but now the queen blocks Black's own bishop on f8.",
+            "8.Nc3": "Morphy ignores the b7 pawn and keeps developing.",
+            "10.Nxb5": "A knight sacrifice to rip open lines toward Black's king.",
+            "12.O-O-O": "Castles and puts the rook on the open d-file in one move.",
+            "13.Rxd7": "Gives up the rook to keep the pressure on.",
+            "16.Qb8+": "The queen sacrifice! The knight has to take it.",
+            "17.Rd8#": "Checkmate. Morphy used only a few pieces, but every one of them was active.",
+        },
+    },
+    {
+        "id": "immortal", "name": "The Immortal Game", "group": "Romantic era",
+        "players": "Anderssen vs. Kieseritzky", "year": 1851, "result": "1-0",
+        "moves": "e4 e5 f4 exf4 Bc4 Qh4+ Kf1 b5 Bxb5 Nf6 Nf3 Qh6 d3 Nh5 Nh4 Qg5 Nf5 c6 g4 Nf6 "
+                 "Rg1 cxb5 h4 Qg6 h5 Qg5 Qf3 Ng8 Bxf4 Qf6 Nc3 Bc5 Nd5 Qxb2 Bd6 Bxg1 e5 Qxa1+ "
+                 "Ke2 Na6 Nxg7+ Kd8 Qf6+ Nxf6 Be7#",
+        "about": "Adolf Anderssen vs. Lionel Kieseritzky, a casual game in London in 1851. "
+                 "Anderssen gives up a bishop, both rooks and finally his queen, then checkmates "
+                 "with his three remaining minor pieces. The most famous example of the romantic, "
+                 "all-out attacking style.",
+        "notes": {
+            "2.f4": "The King's Gambit, the favourite opening of the era.",
+            "3...Qh4+": "The check means White's king can no longer castle.",
+            "4...b5": "Black gives up a pawn to pull White's bishop away.",
+            "11.Rg1": "Anderssen lets Black take the bishop on b5 and keeps building the attack.",
+            "17...Qxb2": "Black grabs a pawn and attacks the rook on a1.",
+            "18.Bd6": "Anderssen offers both rooks! Bxg1 and Qxa1+ are coming, and he allows both.",
+            "19.e5": "Cuts Black's queen off from defending the kingside.",
+            "22.Qf6+": "The final sacrifice drags the g8 knight away from guarding e7.",
+            "23.Be7#": "Checkmate with a bishop and two knights, while Black still has almost every piece.",
+        },
+    },
+    {
+        "id": "evergreen", "name": "The Evergreen Game", "group": "Romantic era",
+        "players": "Anderssen vs. Dufresne", "year": 1852, "result": "1-0",
+        "moves": "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4 O-O d3 Qb3 Qf6 e5 Qg6 Re1 Nge7 "
+                 "Ba3 b5 Qxb5 Rb8 Qa4 Bb6 Nbd2 Bb7 Ne4 Qf5 Bxd3 Qh5 Nf6+ gxf6 exf6 Rg8 Rad1 Qxf3 "
+                 "Rxe7+ Nxe7 Qxd7+ Kxd7 Bf5+ Ke8 Bd7+ Kf8 Bxe7#",
+        "about": "Anderssen again, a year after the Immortal Game, this time against Jean Dufresne "
+                 "in Berlin. It opens with the Evans Gambit and ends with a rook sacrifice, a queen "
+                 "sacrifice and a double check. Wilhelm Steinitz nicknamed it the 'evergreen' among "
+                 "Anderssen's wins.",
+        "notes": {
+            "4.b4": "The Evans Gambit: a pawn sacrifice to gain time for c3 and d4.",
+            "7.O-O": "White gives up another pawn to stay ahead in development.",
+            "11.Ba3": "The bishop aims down the diagonal toward Black's king.",
+            "17.Nf6+": "A knight sacrifice that rips open Black's kingside.",
+            "19...Qxf3": "Black threatens Qxg2 checkmate, so White has to keep giving check.",
+            "20.Rxe7+": "The finale starts with a rook sacrifice.",
+            "21.Qxd7+": "Now the queen! The king has to take.",
+            "22.Bf5+": "Double check: the bishop and the d1 rook both attack the king.",
+            "24.Bxe7#": "Checkmate.",
+        },
+    },
+    {
+        "id": "century", "name": "The Game of the Century", "group": "Modern era",
+        "players": "Byrne vs. Fischer", "year": 1956, "result": "0-1",
+        "moves": "Nf3 Nf6 c4 g6 Nc3 Bg7 d4 O-O Bf4 d5 Qb3 dxc4 Qxc4 c6 e4 Nbd7 Rd1 Nb6 Qc5 Bg4 "
+                 "Bg5 Na4 Qa3 Nxc3 bxc3 Nxe4 Bxe7 Qb6 Bc4 Nxc3 Bc5 Rfe8+ Kf1 Be6 Bxb6 Bxc4+ Kg1 "
+                 "Ne2+ Kf1 Nxd4+ Kg1 Ne2+ Kf1 Nc3+ Kg1 axb6 Qb4 Ra4 Qxb6 Nxd1 h3 Rxa2 Kh2 Nxf2 "
+                 "Re1 Rxe1 Qd8+ Bf8 Nxe1 Bd5 Nf3 Ne4 Qb8 b5 h4 h5 Ne5 Kg7 Kg1 Bc5+ Kf1 Ng3+ Ke1 "
+                 "Bb4+ Kd1 Bb3+ Kc1 Ne2+ Kb1 Nc3+ Kc1 Rc2#",
+        "about": "13-year-old Bobby Fischer, playing Black, beats Donald Byrne, one of the top "
+                 "players in the US, in New York in 1956. On move 17 Fischer gives up his queen for "
+                 "a crushing attack, collects a pile of White's pieces, and finishes with all his "
+                 "pieces working together.",
+        "notes": {
+            "11...Na4": "A surprising knight jump that starts the fireworks.",
+            "13...Nxe4": "Grabs the e4 pawn and opens lines toward White's king.",
+            "14.Bxe7": "Attacks both the queen and the rook.",
+            "17...Be6": "The famous queen sacrifice: Fischer leaves his queen on b6 to be taken.",
+            "18.Bxb6": "Byrne takes the queen.",
+            "18...Bxc4+": "Now a 'windmill' of checks begins.",
+            "20...Nxd4+": "Every knight move is check, and Black collects material each time.",
+            "25...Nxd1": "Black has won back far more than the queen, and White's king is stuck.",
+            "41...Rc2#": "Checkmate, with knight, bishops and rook all working together.",
+        },
+    },
+    {
+        "id": "kasparov", "name": "Kasparov's Immortal", "group": "Modern era",
+        "players": "Kasparov vs. Topalov", "year": 1999, "result": "1-0",
+        "moves": "e4 d6 d4 Nf6 Nc3 g6 Be3 Bg7 Qd2 c6 f3 b5 Nge2 Nbd7 Bh6 Bxh6 Qxh6 Bb7 a3 e5 "
+                 "O-O-O Qe7 Kb1 a6 Nc1 O-O-O Nb3 exd4 Rxd4 c5 Rd1 Nb6 g3 Kb8 Na5 Ba8 Bh3 d5 "
+                 "Qf4+ Ka7 Rhe1 d4 Nd5 Nbxd5 exd5 Qd6 Rxd4 cxd4 Re7+ Kb6 Qxd4+ Kxa5 b4+ Ka4 Qc3 "
+                 "Qxd5 Ra7 Bb7 Rxb7 Qc4 Qxf6 Kxa3 Qxa6+ Kxb4 c3+ Kxc3 Qa1+ Kd2 Qb2+ Kd1 Bf1 Rd2 "
+                 "Rd7 Rxd7 Bxc4 bxc4 Qxh8 Rd3 Qa8 c3 Qa4+ Ke1 f4 f5 Kc1 Rd2 Qa7",
+        "about": "Garry Kasparov vs. Veselin Topalov at Wijk aan Zee in 1999, often called "
+                 "Kasparov's Immortal. Kasparov sacrifices a rook on move 24 and chases Black's "
+                 "king all the way across the board to White's own back rank. Topalov resigned "
+                 "after White's 44th move.",
+        "notes": {
+            "13...O-O-O": "Black castles queenside, right where White is going to attack.",
+            "24.Rxd4": "The famous rook sacrifice, calculated many moves ahead.",
+            "25.Re7+": "The king hunt begins.",
+            "26...Kxa5": "Black's king is pulled forward, out of its shelter.",
+            "27.b4+": "Another pawn given up to keep the king running.",
+            "31...Kxa3": "The black king is now deep in White's half of the board.",
+            "33.c3+": "One more pawn sacrifice to keep the king moving.",
+            "35...Kd1": "Black's king has walked all the way to White's back rank.",
+            "36.Bf1": "A quiet move in the middle of the chaos that sets up winning material.",
+            "39.Qxh8": "White wins the rook, and the attack has paid off.",
+            "44.Qa7": "Topalov resigned here, with White's extra material decisive.",
+        },
+    },
+]
+
 # ---------------------------------------------------------------- board logic
 
 SKIP = {"...", "1-0", "0-1", "1/2-1/2", "*"}
@@ -326,14 +463,19 @@ def note_ply(name, key, moves, san):
 
 
 OPENINGS = {}
-for _o in OPENING_LINES:
+for _o in [dict(o, kind="opening") for o in OPENING_LINES] + \
+          [dict(g, kind="game") for g in GAME_LINES]:
+    if _o["id"] in OPENINGS:
+        raise SystemExit(f"Two entries share the id '{_o['id']}'")
     _moves, _san = parse_line(_o["name"], _o["moves"])
     _notes = [""] * len(_san)
     for _key, _text in _o.get("notes", {}).items():
         _notes[note_ply(_o["name"], _key, _moves, _san)] = _text
     OPENINGS[_o["id"]] = {"id": _o["id"], "name": _o["name"], "group": _o["group"],
                           "about": _o.get("about", ""), "moves": _moves,
-                          "san": _san, "notes": _notes}
+                          "san": _san, "notes": _notes, "kind": _o["kind"],
+                          "players": _o.get("players", ""), "year": _o.get("year", ""),
+                          "result": _o.get("result", "")}
 
 
 def idx(square):
@@ -363,9 +505,7 @@ def scaled(rgb):
 
 
 def piece_colour(ch):
-    tint = WHITE_TINT if ch.isupper() else BLACK_TINT
-    v = VALUE[ch.lower()]
-    return (v * tint[0], v * tint[1], v * tint[2])
+    return PIECE_COLOURS[ch]
 
 
 def render(board, highlight=None):
@@ -511,6 +651,9 @@ PAGE = r"""<!doctype html>
   .sub { color:var(--muted); margin:0 0 18px; }
   h2 { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
        margin:18px 0 8px; }
+  .tabs { display:flex; gap:6px; margin:6px 0 4px; }
+  .tabs button { background:none; border:1px solid var(--line); padding:7px 14px; color:var(--muted); }
+  .tabs button.on { background:var(--card); color:var(--text); border-color:var(--accent); }
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:8px; }
   button { font:inherit; color:inherit; cursor:pointer; border-radius:10px; }
   .op { background:var(--card); border:1px solid var(--line); padding:12px; text-align:left; }
@@ -547,8 +690,13 @@ PAGE = r"""<!doctype html>
 <main>
   <section>
     <h1>Pi Openings</h1>
-    <p class="sub">Tap an opening to play it on the Sense HAT.</p>
-    <div id="groups"></div>
+    <nav class="tabs">
+      <button data-tab="opening" class="on">Openings</button>
+      <button data-tab="game">Famous games</button>
+    </nav>
+    <p class="sub" id="sub">Tap an opening to play it on the Sense HAT.</p>
+    <div id="tab-opening"></div>
+    <div id="tab-game" hidden></div>
   </section>
   <aside>
     <div class="board" id="board"></div>
@@ -597,24 +745,40 @@ function showNote(o, i) {
   n.append(b, o.notes[i]);
 }
 
+const SUB = {opening: "Tap an opening to play it on the Sense HAT.",
+             game: "Tap a game to replay it move by move on the Sense HAT."};
+function showTab(t) {
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  $("tab-opening").hidden = t !== "opening";
+  $("tab-game").hidden = t !== "game";
+  $("sub").textContent = SUB[t];
+}
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+
+const RESULT = {"1-0": "White wins", "0-1": "Black wins", "1/2-1/2": "Draw"};
+
 async function init() {
   const list = await (await fetch("/api/openings")).json();
   const groups = {};
-  for (const o of list) { openings[o.id] = o; (groups[o.group] ||= []).push(o); }
-  for (const [g, ops] of Object.entries(groups)) {
-    const h = document.createElement("h2"); h.textContent = g; $("groups").append(h);
+  for (const o of list) { openings[o.id] = o; (groups[o.kind + "|" + o.group] ||= []).push(o); }
+  for (const [key, ops] of Object.entries(groups)) {
+    const [kind, g] = key.split("|");
+    const box = $("tab-" + kind);
+    const h = document.createElement("h2"); h.textContent = g; box.append(h);
     const grid = document.createElement("div"); grid.className = "grid";
     for (const o of ops) {
       const b = document.createElement("button");
       b.className = "op"; b.dataset.id = o.id;
       b.innerHTML = `<b></b><span></span>`;
       b.querySelector("b").textContent = o.name;
-      b.querySelector("span").textContent =
-        o.san.slice(0, 4).join(" ") + " …  · " + Math.ceil(o.san.length / 2) + " moves";
+      const n = Math.ceil(o.san.length / 2) + " moves";
+      b.querySelector("span").textContent = o.kind === "game"
+        ? `${o.players} · ${o.year} · ${n}`
+        : o.san.slice(0, 4).join(" ") + " …  · " + n;
       b.onclick = () => play(o.id);
       grid.append(b);
     }
-    $("groups").append(grid);
+    box.append(grid);
   }
   for (let i = 0; i < 64; i++) {
     const d = document.createElement("div");
@@ -638,7 +802,8 @@ function draw(s) {
     if (s.last && i === s.last[1]) c.classList.add("to");
   }
   const o = openings[s.opening];
-  $("now").textContent = o ? `${o.name} — ${s.playing ? "move " + s.ply + "/" + s.total : "done"}` : "Nothing playing";
+  const done = o && o.result ? `${o.result} · ${RESULT[o.result] || ""}` : "done";
+  $("now").textContent = o ? `${o.name} — ${s.playing ? "move " + Math.ceil(s.ply / 2) + "/" + Math.ceil(s.total / 2) : done}` : "Nothing playing";
   if (changed) $("about").textContent = o ? o.about : "";
 
   // move list: dotted underline = has a note; tap to read it
