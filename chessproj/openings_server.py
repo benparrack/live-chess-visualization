@@ -7,8 +7,8 @@ chosen line on the Sense HAT 8x8 LED matrix, with a description and move notes.
     then open  http://ryanpi.local:8000  on a phone or laptop on the same Wi-Fi
 
 Needs: sense_hat and python-chess   (pip install chess --break-system-packages)
-Colours match lichess.py: amber = white pieces, blue = black pieces,
-brightness = piece value, white flash = the square a piece just moved to.
+Colours and LED setup come from panel.py, so they match colorchess/followchess;
+a white flash marks the square a piece just moved to. Joystick up/down = brightness.
 """
 
 import json
@@ -17,36 +17,14 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import chess
-from sense_hat import SenseHat
+
+from panel import DARK_SQUARE, FLASH_TO, LIGHT_SQUARE, PIECE_COLOURS, scaled, sense
 
 # ---------------------------------------------------------------- settings
 
 PORT = 8000
-ROTATION = 180            # same as lichess.py; change if the board looks flipped
-BRIGHTNESS = 0.6
 FLASH_SECONDS = 0.35
 DEFAULT_DELAY = 1.2       # seconds between moves (the page slider overrides this)
-
-# Same palette as panel.py on main: every piece has its own hue
-LIGHT_SQUARE = (26, 26, 28)
-DARK_SQUARE = (0, 0, 0)
-PIECE_COLOURS = {
-    # white side: warm hues
-    "P": (140, 100, 55),     # dim brown
-    "N": (255, 100, 0),      # orange
-    "B": (255, 215, 4),      # gold/yellow
-    "R": (230, 20, 20),      # red
-    "Q": (255, 175, 120),    # peach
-    "K": (255, 55, 140),     # pink
-    # black side: cool hues
-    "p": (40, 55, 115),      # dim slate
-    "n": (192, 209, 0),      # yellow-green
-    "b": (30, 200, 85),      # green
-    "r": (45, 55, 255),      # blue
-    "q": (0, 228, 217),      # cyan
-    "k": (190, 70, 255),     # purple
-}
-FLASH_TO = (255, 255, 255)
 FLASH_FROM = (70, 70, 60)
 
 # ---------------------------------------------------------------- openings
@@ -495,19 +473,6 @@ START = board_chars(chess.Board())
 
 # ---------------------------------------------------------------- LEDs
 
-sense = SenseHat()
-sense.set_rotation(ROTATION)
-sense.low_light = False
-
-
-def scaled(rgb):
-    return tuple(max(0, min(255, int(c * BRIGHTNESS))) for c in rgb)
-
-
-def piece_colour(ch):
-    return PIECE_COLOURS[ch]
-
-
 def render(board, highlight=None):
     pixels = []
     for i, ch in enumerate(board):
@@ -515,7 +480,7 @@ def render(board, highlight=None):
         if ch == ".":
             rgb = LIGHT_SQUARE if (row + col) % 2 == 0 else DARK_SQUARE
         else:
-            rgb = piece_colour(ch)
+            rgb = PIECE_COLOURS[ch]
         pixels.append(scaled(rgb))
     if highlight:
         frm, to = highlight
@@ -615,7 +580,10 @@ class Handler(BaseHTTPRequestHandler):
             body = {}
 
         if self.path == "/api/play" and body.get("id") in OPENINGS:
-            delay = min(5.0, max(0.4, float(body.get("delay", DEFAULT_DELAY))))
+            try:
+                delay = min(5.0, max(0.4, float(body.get("delay", DEFAULT_DELAY))))
+            except (TypeError, ValueError):
+                delay = DEFAULT_DELAY
             start_job(play, body["id"], delay)
             self.send('{"ok":true}')
         elif self.path == "/api/stop":
