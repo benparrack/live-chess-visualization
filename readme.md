@@ -106,3 +106,7 @@ Launch through `pisim.py`: running `colorchess.py` directly expects the real `se
 - **No display / `$DISPLAY` error:** run from a graphical desktop session. The viewer needs a windowing environment.
 - **Live mode stays blank or reports stream errors:** try the offline replay first to check the simulator independently of the network.
 - **Windows:** the current launcher uses POSIX file descriptors (`pass_fds`) and targets macOS/Linux. On Windows, use a Linux desktop environment with GUI support or adapt the launcher.
+
+## Bluetooth speakers on the Pi
+
+Use the standalone [Sense HAT Bluetooth speaker picker](bluetooth_speakers.md) to scan, select, pair, connect, and test a speaker using the LED matrix and joystick. Run it separately from the chess display.
