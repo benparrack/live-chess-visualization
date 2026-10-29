@@ -292,6 +292,342 @@ OPENING_LINES = [
     },
 ]
 
+# ------------------------------------------------ more 1.e4 openings
+    {
+        "id": "scotch", "name": "Scotch Game", "group": "1.e4",
+        "moves": "e4 e5 Nf3 Nc6 d4 exd4 Nxd4 Nf6 Nxc6 bxc6 e5 Qe7 Qe2 Nd5 c4 Ba6 b3 g6 f4 f6",
+        "about": "Instead of the slow build-up of the Italian or Ruy Lopez, White opens the centre "
+                 "on move three. A favourite of Kasparov. This is the Mieses Variation, where White "
+                 "trades knights to damage Black's pawns and then grabs space.",
+        "notes": {
+            "3.d4": "Opens the centre straight away.",
+            "3...exd4": "Black has to take, or the e5 pawn falls.",
+            "4...Nf6": "Develops and attacks e4.",
+            "5.Nxc6": "The Mieses: trades knights to double Black's pawns.",
+            "6.e5": "Kicks the knight off f6.",
+            "6...Qe7": "Attacks the e5 pawn, which White has to defend.",
+            "8.c4": "Chases the knight away from the centre.",
+            "8...Ba6": "Pins the c4 pawn to White's queen.",
+            "10...f6": "Black strikes at e5 to open lines.",
+        },
+    },
+    {
+        "id": "petrov", "name": "Petrov Defense", "group": "1.e4",
+        "moves": "e4 e5 Nf3 Nf6 Nxe5 d6 Nf3 Nxe4 d4 d5 Bd3 Nc6 O-O Be7 c4 Nb4 Be2 O-O Nc3 Bf5 a3 Nxc3 bxc3 Nc6",
+        "about": "Also called the Russian Game. Black ignores the attack on e5 and counterattacks "
+                 "e4 instead. It's famous for being very solid and hard to beat, which makes it a "
+                 "popular drawing weapon at top level.",
+        "notes": {
+            "2...Nf6": "Counterattacks e4 instead of defending e5.",
+            "3...d6": "Kicks the knight first. Taking on e4 straight away runs into Qe2.",
+            "4...Nxe4": "Now Black wins the pawn back.",
+            "5.d4": "Takes the centre and prepares Bd3 to challenge the e4 knight.",
+            "8.c4": "Undermines d5, which supports Black's knight.",
+            "8...Nb4": "Hits the bishop on d3.",
+            "11.a3": "Kicks the knight off b4.",
+            "12...Nc6": "The knight comes back, and the position is about level.",
+        },
+    },
+    {
+        "id": "vienna", "name": "Vienna Gambit", "group": "1.e4",
+        "moves": "e4 e5 Nc3 Nf6 f4 d5 fxe5 Nxe4 Nf3 Be7 d4 O-O Bd3 f5 exf6 Bxf6 O-O Nc6",
+        "about": "White develops the queen's knight first, keeping the f-pawn free to advance. "
+                 "Then f4 turns it into a kind of King's Gambit with an extra piece already out. "
+                 "Black's best answer is to strike back in the centre with ...d5.",
+        "notes": {
+            "2.Nc3": "Develops and guards e4, keeping the f-pawn free.",
+            "3.f4": "The gambit: attacks e5 and prepares to open the f-file.",
+            "3...d5": "The best reply: Black hits back in the centre.",
+            "4...Nxe4": "The knight lands on a strong central square.",
+            "7...f5": "Supports the e4 knight.",
+            "8.exf6": "En passant! White captures the pawn that just moved past e5.",
+        },
+    },
+    {
+        "id": "philidor", "name": "Philidor Defense", "group": "1.e4",
+        "moves": "e4 e5 Nf3 d6 d4 Nf6 Nc3 Nbd7 Bc4 Be7 O-O O-O Re1 c6 a4 b6",
+        "about": "Named after François-André Philidor, the best player of the 18th century. Black "
+                 "defends e5 with a pawn and keeps a solid, compact position. This modern "
+                 "Hanham set-up holds e5 with the knight and prepares slow queenside play.",
+        "notes": {
+            "2...d6": "Defends e5 with a pawn, but blocks the f8 bishop.",
+            "4...Nbd7": "The Hanham set-up: Black keeps a firm grip on e5.",
+            "7...c6": "Prepares ...b5 and gives the queen a route to c7.",
+            "8.a4": "Stops ...b5 and gains space on the queenside.",
+        },
+    },
+    {
+        "id": "dragon", "name": "Sicilian Dragon", "group": "1.e4",
+        "moves": "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 g6 Be3 Bg7 f3 O-O Qd2 Nc6 Bc4 Bd7 O-O-O Rc8 Bb3 Ne5 h4 h5",
+        "about": "Black's pawns on d6, e7, f7, g6 and h7 look like a dragon. The bishop on g7 "
+                 "breathes fire down the long diagonal. In this Yugoslav Attack both sides castle "
+                 "on opposite wings, and it's a race to checkmate first.",
+        "notes": {
+            "5...g6": "The Dragon: the bishop goes to g7 to rake the long diagonal.",
+            "6.Be3": "The Yugoslav Attack: Be3, f3, Qd2, castle long, then push pawns.",
+            "7.f3": "Stops ...Ng4 from chasing the bishop.",
+            "10.O-O-O": "Opposite-side castling: now it's a race.",
+            "10...Rc8": "The rook takes the open c-file toward White's king.",
+            "12.h4": "White plans h5 to open the h-file against Black's king.",
+            "12...h5": "Black blocks the h-pawn.",
+        },
+    },
+    {
+        "id": "sveshnikov", "name": "Sicilian Sveshnikov", "group": "1.e4",
+        "moves": "e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 Nf6 Nc3 e5 Ndb5 d6 Bg5 a6 Na3 b5 Bxf6 gxf6 Nd5 f5",
+        "about": "A bold Sicilian where Black plays ...e5, accepting a permanent hole on d5 in "
+                 "exchange for active pieces. Black ends up with ugly-looking pawns but the "
+                 "bishop pair and lots of activity. Magnus Carlsen has used it in world "
+                 "championship matches.",
+        "notes": {
+            "5...e5": "The Sveshnikov: kicks the knight, at the cost of a hole on d5.",
+            "6.Ndb5": "Eyes d6, which ...e5 weakened.",
+            "7...a6": "Drives the knight to the edge of the board.",
+            "9.Bxf6": "Gives up the bishop to wreck Black's pawns and win control of d5.",
+            "10.Nd5": "The knight lands on the square Black left open.",
+            "10...f5": "Black uses the pawns to fight for the centre.",
+        },
+    },
+    {
+        "id": "alapin", "name": "Sicilian Alapin", "group": "1.e4",
+        "moves": "e4 c5 c3 Nf6 e5 Nd5 d4 cxd4 Nf3 Nc6 cxd4 d6 Bc4 Nb6 Bb5 dxe5 Nxe5 Bd7",
+        "about": "A practical way to avoid the main-line Sicilian. White plays c3 so that after "
+                 "d4 and ...cxd4 a pawn can recapture, giving White the ideal two-pawn centre. "
+                 "It's a favourite at club level because it avoids a lot of theory.",
+        "notes": {
+            "2.c3": "The Alapin: prepares d4 so a pawn can recapture.",
+            "2...Nf6": "Hits e4 straight away.",
+            "3.e5": "Kicks the knight, like in the Alekhine Defence.",
+            "6.cxd4": "White now has two pawns in the centre.",
+            "7...Nb6": "Hits the bishop on c4.",
+            "8.Bb5": "Pins the c6 knight to Black's king.",
+        },
+    },
+    {
+        "id": "pirc", "name": "Pirc Defense", "group": "1.e4",
+        "moves": "e4 d6 d4 Nf6 Nc3 g6 f4 Bg7 Nf3 O-O Bd3 Na6 O-O c5 d5 Bg4",
+        "about": "A hypermodern defence. Black lets White build a big centre, puts the bishop on "
+                 "g7 and waits for the right moment to strike. This is the aggressive Austrian "
+                 "Attack, where White grabs as much space as possible.",
+        "notes": {
+            "1...d6": "The Pirc: Black lets White take the centre and plans to hit it later.",
+            "3...g6": "The bishop heads for g7.",
+            "4.f4": "The Austrian Attack: White grabs lots of space.",
+            "7...c5": "Black strikes at d4.",
+            "8.d5": "White gains more space instead of trading.",
+            "8...Bg4": "Pins the f3 knight to White's queen.",
+        },
+    },
+    {
+        "id": "alekhine", "name": "Alekhine Defense", "group": "1.e4",
+        "moves": "e4 Nf6 e5 Nd5 d4 d6 Nf3 Bg4 Be2 e6 O-O Be7 h3 Bh5 c4 Nb6 exd6 cxd6 Nc3 O-O Be3 d5",
+        "about": "Named after world champion Alexander Alekhine. Black's knight provokes White's "
+                 "pawns forward, hoping they'll become overextended targets. A provocative and "
+                 "unusual defence.",
+        "notes": {
+            "1...Nf6": "The Alekhine: invites White's pawns forward.",
+            "2.e5": "Kicks the knight.",
+            "3...d6": "Attacks the e5 pawn.",
+            "4...Bg4": "Pins the knight that defends e5.",
+            "8.c4": "Kicks the knight again.",
+            "9.exd6": "White trades on d6 rather than overextend.",
+            "11...d5": "Black hits c4 and claims some central space.",
+        },
+    },
+    # ------------------------------------------------ more 1.d4 openings
+    {
+        "id": "slav", "name": "Slav Defense", "group": "1.d4",
+        "moves": "d4 d5 c4 c6 Nf3 Nf6 Nc3 dxc4 a4 Bf5 e3 e6 Bxc4 Bb4 O-O Nbd7 Qe2 Bg6 e4 O-O",
+        "about": "Black defends d5 with ...c6 instead of ...e6, so the light-squared bishop can get "
+                 "out before the pawn chain closes. One of the most solid answers to the Queen's "
+                 "Gambit.",
+        "notes": {
+            "2...c6": "The Slav: defends d5 and keeps the c8 bishop's diagonal open.",
+            "4...dxc4": "Black takes the pawn, hoping to hold it with ...b5.",
+            "5.a4": "Stops ...b5, so White will win the pawn back.",
+            "5...Bf5": "The bishop gets out before ...e6.",
+            "7.Bxc4": "White regains the pawn.",
+            "10.e4": "White finally gets the e4 push in.",
+        },
+    },
+    {
+        "id": "semislav", "name": "Semi-Slav (Meran)", "group": "1.d4",
+        "moves": "d4 d5 c4 c6 Nf3 Nf6 Nc3 e6 e3 Nbd7 Bd3 dxc4 Bxc4 b5 Bd3 Bb7 O-O a6 e4 c5 d5 Qc7",
+        "about": "A mix of the Slav and the Queen's Gambit Declined. In the Meran Variation, Black "
+                 "takes on c4 and uses the time to expand on the queenside. It leads to sharp, "
+                 "complicated positions.",
+        "notes": {
+            "4...e6": "The Semi-Slav: both ...c6 and ...e6.",
+            "6...dxc4": "Black takes once White's bishop has moved, gaining a tempo.",
+            "7...b5": "The Meran: kicks the bishop and grabs queenside space.",
+            "8...Bb7": "The bishop lines up on the long diagonal.",
+            "10.e4": "White claims the centre.",
+            "10...c5": "Black hits back at d4.",
+            "11.d5": "White pushes past, opening lines while Black's king is uncastled.",
+        },
+    },
+    {
+        "id": "nimzo", "name": "Nimzo-Indian", "group": "1.d4",
+        "moves": "d4 Nf6 c4 e6 Nc3 Bb4 Qc2 O-O a3 Bxc3+ Qxc3 b6 Bg5 Bb7 f3 h6 Bh4 d5 e3 Nbd7",
+        "about": "Named after Aron Nimzowitsch. Black pins the c3 knight so White can't easily play "
+                 "e4, and is happy to give up the bishop to damage White's pawns. One of the most "
+                 "respected defences to 1.d4.",
+        "notes": {
+            "3...Bb4": "The Nimzo-Indian: the pin makes e4 hard for White.",
+            "4.Qc2": "The Classical: White can recapture on c3 with the queen, keeping the pawns healthy.",
+            "5.a3": "Asks the bishop to decide.",
+            "5...Bxc3+": "Black gives up the bishop pair.",
+            "7...Bb7": "Fights for e4 from a distance.",
+            "8.f3": "Prepares e4.",
+            "9...d5": "Black grabs the centre before e4 arrives.",
+        },
+    },
+    {
+        "id": "qid", "name": "Queen's Indian", "group": "1.d4",
+        "moves": "d4 Nf6 c4 e6 Nf3 b6 g3 Ba6 b3 Bb4+ Bd2 Be7 Bg2 c6 Bc3 d5 Ne5 Nfd7 Nxd7 Nxd7 Nd2 O-O O-O",
+        "about": "Black fianchettoes the queen's bishop to control the centre from the side, "
+                 "especially the e4 square. A calm, solid defence that's hard to crack.",
+        "notes": {
+            "3...b6": "The Queen's Indian: the bishop will control e4 from the flank.",
+            "4...Ba6": "Hits the c4 pawn.",
+            "5...Bb4+": "Lures White's bishop to d2, where it's a bit in the way.",
+            "8...d5": "Black stakes a claim in the centre.",
+            "9.Ne5": "The knight jumps forward, ready to trade.",
+        },
+    },
+    {
+        "id": "grunfeld", "name": "Grünfeld Defense", "group": "1.d4",
+        "moves": "d4 Nf6 c4 g6 Nc3 d5 cxd5 Nxd5 e4 Nxc3 bxc3 Bg7 Bc4 c5 Ne2 Nc6 Be3 O-O O-O Bg4 f3 Na5 Bd5 Bd7 Rb1 a6",
+        "about": "A dynamic hypermodern defence. Black lets White build a huge pawn centre, then "
+                 "attacks it with the g7 bishop, ...c5 and the knights. Kasparov and many other "
+                 "world champions have played it.",
+        "notes": {
+            "3...d5": "The Grünfeld: Black challenges the centre right away.",
+            "5.e4": "White builds a big centre and gains time on the knight.",
+            "6.bxc3": "White's centre is huge, and Black's whole plan is to attack it.",
+            "7...c5": "The first strike at d4.",
+            "8.Ne2": "The knight goes to e2 to support d4 without being pinned.",
+            "10...Bg4": "Adds pressure on d4 by hitting the e2 knight.",
+            "11...Na5": "Black leaves the bishop hanging and attacks White's bishop instead.",
+        },
+    },
+    {
+        "id": "dutch", "name": "Dutch (Leningrad)", "group": "1.d4",
+        "moves": "d4 f5 g3 Nf6 Bg2 g6 Nf3 Bg7 O-O O-O c4 d6 Nc3 Qe8 d5 a5",
+        "about": "Black grabs the e4 square with the f-pawn and plays for a kingside attack. The "
+                 "Leningrad version adds a King's Indian-style bishop on g7. Risky, but "
+                 "uncompromising.",
+        "notes": {
+            "1...f5": "The Dutch: Black controls e4 from the side.",
+            "3...g6": "The Leningrad: the bishop goes to g7.",
+            "7...Qe8": "Prepares ...e5, and the queen can swing to f7 or h5.",
+            "8.d5": "Gains space and makes ...e5 less attractive.",
+            "8...a5": "Secures c5 for a knight.",
+        },
+    },
+    {
+        "id": "benoni", "name": "Modern Benoni", "group": "1.d4",
+        "moves": "d4 Nf6 c4 c5 d5 e6 Nc3 exd5 cxd5 d6 e4 g6 Nf3 Bg7 Be2 O-O O-O Re8 Nd2 Na6 f3 Nc7",
+        "about": "Black creates an unbalanced pawn structure straight away. White gets a central "
+                 "pawn majority, while Black gets a queenside majority and active pieces. A "
+                 "fighting choice when Black needs to win.",
+        "notes": {
+            "2...c5": "The Benoni: challenges d4 at once.",
+            "3.d5": "White gains space instead of trading.",
+            "4...exd5": "Creates a lopsided structure: White has more pawns in the centre, "
+                        "Black has more on the queenside.",
+            "9...Re8": "Puts pressure on e4.",
+            "10.Nd2": "The knight heads for c4 to hit d6.",
+            "11...Nc7": "Supports ...b5.",
+        },
+    },
+    {
+        "id": "benko", "name": "Benko Gambit", "group": "1.d4",
+        "moves": "d4 Nf6 c4 c5 d5 b5 cxb5 a6 bxa6 g6 Nc3 Bxa6 e4 Bxf1 Kxf1 d6 Nf3 Bg7 g3 O-O Kg2 Nbd7",
+        "about": "Black gives up a pawn for long-term pressure down the open a- and b-files. Black "
+                 "doesn't attack the king, but squeezes White's queenside for the rest of the game.",
+        "notes": {
+            "3...b5": "The Benko: offers a pawn for queenside pressure.",
+            "4...a6": "Offers another pawn to open the a- and b-files.",
+            "7.e4": "White builds the centre, but will lose the right to castle.",
+            "8.Kxf1": "White's king can't castle now.",
+            "11.Kg2": "White's king tucks itself away by hand.",
+        },
+    },
+    {
+        "id": "catalan", "name": "Catalan", "group": "1.d4",
+        "moves": "d4 Nf6 c4 e6 g3 d5 Bg2 Be7 Nf3 O-O O-O dxc4 Qc2 a6 Qxc4 b5 Qc2 Bb7 Bd2 Be4 Qc1",
+        "about": "A mix of the Queen's Gambit and the Réti. The bishop on g2 presses down the long "
+                 "diagonal toward Black's queenside. Even when Black grabs a pawn, White usually "
+                 "wins it back and keeps a lasting edge.",
+        "notes": {
+            "3.g3": "The Catalan: the bishop on g2 will press the long diagonal.",
+            "6...dxc4": "Black grabs the pawn, but White will win it back.",
+            "7.Qc2": "Prepares to recapture on c4.",
+            "8...b5": "Gains space with tempo.",
+            "10...Be4": "Hits the queen and blocks the g2 bishop.",
+        },
+    },
+    {
+        "id": "trompowsky", "name": "Trompowsky Attack", "group": "1.d4",
+        "moves": "d4 Nf6 Bg5 Ne4 Bf4 c5 f3 Qa5+ c3 Nf6 Nd2 cxd4 Nb3 Qb6 Qxd4 Nc6 Qxb6 axb6",
+        "about": "White brings the bishop out on move two and threatens to double Black's pawns. "
+                 "It sidesteps the big theory of the Indian defences and leads to unusual "
+                 "positions early.",
+        "notes": {
+            "2.Bg5": "The Trompowsky: threatens Bxf6, doubling Black's pawns.",
+            "2...Ne4": "Sidesteps and attacks the bishop.",
+            "3...c5": "Strikes at d4.",
+            "4.f3": "Kicks the knight off e4.",
+            "4...Qa5+": "A check that forces White to block with c3.",
+            "7.Nb3": "Hits the queen.",
+            "9...axb6": "The queens are off. Black's doubled pawns are hard to attack.",
+        },
+    },
+    # ------------------------------------------------ more flank openings
+    {
+        "id": "reti", "name": "Réti Opening", "group": "Other",
+        "moves": "Nf3 d5 c4 e6 g3 Nf6 Bg2 Be7 O-O O-O b3 c5 Bb2 Nc6 e3 b6 Nc3 Bb7 cxd5 Nxd5",
+        "about": "Named after Richard Réti, a pioneer of hypermodern chess. White controls the "
+                 "centre with pieces and flank pawns instead of occupying it, and both bishops "
+                 "aim at the middle from the sides.",
+        "notes": {
+            "1.Nf3": "The Réti: White controls the centre without committing pawns.",
+            "2.c4": "Hits d5 from the side.",
+            "3.g3": "The bishop goes to g2.",
+            "6.b3": "Both bishops will aim at the centre from the flanks.",
+            "10.cxd5": "Opens the c-file and the long diagonals.",
+        },
+    },
+    {
+        "id": "kia", "name": "King's Indian Attack", "group": "Other",
+        "moves": "e4 e6 d3 d5 Nd2 Nf6 Ngf3 c5 g3 Nc6 Bg2 Be7 O-O O-O Re1 b5 e5 Nd7 Nf1 a5 h4 b4",
+        "about": "A system rather than a sharp opening: White plays a King's Indian set-up with an "
+                 "extra move. Bobby Fischer used it a lot. Here it's played against a French "
+                 "set-up, where White attacks on the kingside and Black on the queenside.",
+        "notes": {
+            "2.d3": "The King's Indian Attack: a reversed King's Indian set-up.",
+            "8.Re1": "Supports e4 and prepares e5.",
+            "8...b5": "Black storms the queenside.",
+            "9.e5": "Gains space and kicks the knight. White's attack will come on the kingside.",
+            "10.Nf1": "The knight reroutes to h2 or e3 to join the attack.",
+            "11.h4": "White's pawns march toward Black's king.",
+        },
+    },
+    {
+        "id": "bird", "name": "Bird's Opening", "group": "Other",
+        "moves": "f4 d5 Nf3 Nf6 e3 g6 b3 Bg7 Bb2 O-O Be2 c5 O-O Nc6",
+        "about": "Named after the 19th-century English player Henry Bird. White grabs e5 from the "
+                 "side, like a Dutch Defence with colours reversed. Rare at top level, but a fun "
+                 "surprise weapon.",
+        "notes": {
+            "1.f4": "Bird's Opening: controls e5 from the side.",
+            "4.b3": "The bishop goes to b2 to aim at e5 and Black's king.",
+            "6...c5": "Black takes space on the queenside.",
+        },
+    },
+ 
+
 # ---------------------------------------------------------------- famous games
 #
 # Same format as the openings, plus who played, the year and the result.
