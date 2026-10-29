@@ -59,6 +59,7 @@ DRAW_COLOUR = (255, 255, 255)
 CONNECTING_COLOUR = (0, 90, 255)  # blue ring with a comet: reaching Lichess
 WAITING_COLOUR = (0, 200, 60)     # green ring, breathing centre: online, no game
 OFFLINE_COLOUR = (255, 0, 0)      # red X: the last request failed
+SEARCHING_COLOUR = (0, 60, 255)   # blue ripples from the centre: Bluetooth scan
 
 # ---------------------------------------------------------------- hardware
 
@@ -391,6 +392,12 @@ def status_frame(kind, step):
         level = 1.0 if step % 10 < 5 else 0.25
         for i in CROSS:
             pixels[i] = lit(OFFLINE_COLOUR, level)
+    elif kind == "searching":
+        front = (step % 20) / 5   # a ripple every 2s, centre (0) to edge (3)
+        for i in range(64):
+            row, col = divmod(i, 8)
+            ring = max(abs(row - 3.5), abs(col - 3.5)) - 0.5
+            pixels[i] = lit(SEARCHING_COLOUR, max(0.08, 1 - abs(ring - front) * 0.7))
     return pixels
 
 

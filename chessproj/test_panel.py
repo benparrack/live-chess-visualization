@@ -3,21 +3,30 @@ Run from chessproj/: python3 -B -m unittest -v test_panel.py"""
 
 import os
 import sys
-import tempfile
 import time
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FRAMES = tempfile.NamedTemporaryFile(suffix=".ndjson")
-os.environ["SENSE_SIM_FD"] = str(os.dup(FRAMES.fileno()))
+os.environ.setdefault("SENSE_SIM_FD", str(os.open(os.devnull, os.O_WRONLY)))
 sys.path.insert(0, os.path.join(HERE, "sim"))
 
 import panel  # noqa: E402  (needs the simulator set up first)
 
+frames = 0
+draw = panel.sense.set_pixels
+
+
+def counted(pixels):
+    global frames
+    frames += 1
+    draw(pixels)
+
+
+panel.sense.set_pixels = counted
+
 
 def frame_count():
-    with open(FRAMES.name) as f:
-        return sum(1 for line in f if line.strip())
+    return frames
 
 
 class FakeStream:
