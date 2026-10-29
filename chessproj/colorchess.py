@@ -76,6 +76,8 @@ def game_history(game_id, fen):
     try:
         with urllib.request.urlopen(request, timeout=10) as stream:
             for raw in stream:
+                if panel.restart_stream or panel.should_quit:
+                    return []
                 if not raw.strip():
                     continue
                 data = json.loads(raw)
