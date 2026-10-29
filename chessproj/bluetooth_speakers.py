@@ -270,6 +270,11 @@ def pick(sense, labels, colour=(0, 100, 180), timeout=None):
     return None
 
 
+def speaker_labels(speakers):
+    # Include address suffix to distinguish identical advertised names.
+    return [f"{i}. {s['name']} {s['address'][-5:]}" for i, s in enumerate(speakers, 1)]
+
+
 def address_arg(value):
     if not re.fullmatch(r"(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}", value):
         raise argparse.ArgumentTypeError("Expected a Bluetooth address: AA:BB:CC:DD:EE:FF")
@@ -336,9 +341,7 @@ def main():
                 print("No speaker candidates found. Try pairing mode and scan again.")
             if args.list:
                 return 0
-            # Include address suffix to distinguish identical advertised names.
-            labels = [f"{i}. {s['name']} {s['address'][-5:]}" for i, s in enumerate(speakers, 1)]
-            selected = pick(sense, labels + ["RESCAN", "QUIT"])
+            selected = pick(sense, speaker_labels(speakers) + ["RESCAN", "QUIT"])
             if selected == len(speakers) + 1:
                 return 0
             if selected == len(speakers):

@@ -1,6 +1,6 @@
 # Bluetooth audio-output picker for Raspberry Pi + Sense HAT
 
-`bluetooth_speakers.py` is independent of the chess program. Run it on the Pi with a real Sense HAT; stop the chess LED program first so both processes do not write the display. The Mac simulator does not simulate Bluetooth.
+`bluetooth_speakers.py` can run on its own, as described below, or from the chess menu: in `menu.py` (same folder), clicking the joystick in opens the same speaker list on the panel. When running it on its own, stop the chess LED program first so both processes do not write the display. The Mac simulator does not simulate Bluetooth.
 
 ## One-time setup on the Pi
 
@@ -18,7 +18,7 @@ Run the script as your ordinary Pi login user, **without sudo**, using `/usr/bin
 
 ## Select using the joystick
 
-Put your speaker in pairing mode and disconnect it from phones/laptops that automatically reconnect. From the repository root:
+Put your speaker in pairing mode and disconnect it from phones/laptops that automatically reconnect. From `chessproj/`:
 
 ```sh
 /usr/bin/python3 bluetooth_speakers.py
@@ -108,6 +108,8 @@ wireplumber.profiles = {
 Then run `systemctl --user restart wireplumber` and reconnect. This configuration syntax does **not** apply to WirePlumber 0.4 (commonly installed on Bookworm); consult the documentation for that installed version. Avoid running competing audio sessions under different users. To keep the user's services running after SSH logout, a dedicated Pi can use `sudo loginctl enable-linger "$USER"`.
 
 ## Local validation without hardware
+
+From `chessproj/`:
 
 ```sh
 python3 -B -m unittest -v test_bluetooth_speakers.py

@@ -67,6 +67,8 @@ python3 pisim.py menu.py      # simulator
 python3 menu.py               # on the Pi
 ```
 
+In `menu.py`, clicking the joystick in opens the Bluetooth speaker screen: blue ripples while it searches, then the speakers it found, one at a time with the name scrolling. Up / Down moves through the list, a click connects that speaker (pairing it first if needed) and makes it the Pi's sound output, and `BACK` returns to the chess. On the Pi it needs the one-time setup in [chessproj/bluetooth_speakers.md](chessproj/bluetooth_speakers.md); in the simulator it shows `NO BLUETOOTH` unless the machine has BlueZ and `python3-dbus`.
+
 ## Controls
 
 Focus the simulator window to use the keyboard:
@@ -75,7 +77,7 @@ Focus the simulator window to use the keyboard:
 | --- | --- |
 | Left / Right | `menu.py`: switch between TV and our game. `colorchess.py` alone: cycle TV channels (featured, bullet, blitz, rapid) |
 | Up / Down | Increase / decrease brightness |
-| Enter | Clear the LEDs and ask the chess program to quit |
+| Enter | `menu.py`: open the Bluetooth speaker screen (hold the stick in for 2s on the Pi to quit). Other scripts: clear the LEDs and quit |
 | r | Restart the program |
 | Close window | Stop the simulator and the chess program |
 
@@ -116,4 +118,4 @@ Launch through `pisim.py`: running `colorchess.py` directly expects the real `se
 
 ## Bluetooth speakers on the Pi
 
-Use the standalone [Sense HAT Bluetooth speaker picker](bluetooth_speakers.md) to scan, select, pair, connect, and test a speaker using the LED matrix and joystick. Run it separately from the chess display.
+Click the joystick in while `menu.py` runs, or use the standalone [Sense HAT Bluetooth speaker picker](chessproj/bluetooth_speakers.md), to scan, select, pair, connect, and test a speaker using the LED matrix and joystick. Run the standalone picker separately from the chess display.
