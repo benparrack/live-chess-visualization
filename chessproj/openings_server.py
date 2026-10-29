@@ -290,7 +290,6 @@ OPENING_LINES = [
             "10...f6": "Shores up e5 so the c6 knight is free to move.",
         },
     },
-]
 
 # ------------------------------------------------ more 1.e4 openings
     {
@@ -626,7 +625,7 @@ OPENING_LINES = [
             "6...c5": "Black takes space on the queenside.",
         },
     },
- 
+]
 
 # ---------------------------------------------------------------- famous games
 #
