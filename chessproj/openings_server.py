@@ -23,15 +23,29 @@ from sense_hat import SenseHat
 
 PORT = 8000
 ROTATION = 180            # same as lichess.py; change if the board looks flipped
-BRIGHTNESS = 1.0
+BRIGHTNESS = 0.6
 FLASH_SECONDS = 0.35
 DEFAULT_DELAY = 1.2       # seconds between moves (the page slider overrides this)
 
-LIGHT_SQUARE = (45, 38, 22)
+# Same palette as panel.py on main: every piece has its own hue
+LIGHT_SQUARE = (26, 26, 28)
 DARK_SQUARE = (0, 0, 0)
-VALUE = {"p": 95, "n": 135, "b": 135, "r": 175, "q": 255, "k": 210}
-WHITE_TINT = (1.00, 0.72, 0.28)
-BLACK_TINT = (0.35, 0.65, 1.00)
+PIECE_COLOURS = {
+    # white side: warm hues
+    "P": (140, 100, 55),     # dim brown
+    "N": (255, 100, 0),      # orange
+    "B": (255, 215, 4),      # gold/yellow
+    "R": (230, 20, 20),      # red
+    "Q": (255, 175, 120),    # peach
+    "K": (255, 55, 140),     # pink
+    # black side: cool hues
+    "p": (40, 55, 115),      # dim slate
+    "n": (192, 209, 0),      # yellow-green
+    "b": (30, 200, 85),      # green
+    "r": (45, 55, 255),      # blue
+    "q": (0, 228, 217),      # cyan
+    "k": (190, 70, 255),     # purple
+}
 FLASH_TO = (255, 255, 255)
 FLASH_FROM = (70, 70, 60)
 
@@ -491,9 +505,7 @@ def scaled(rgb):
 
 
 def piece_colour(ch):
-    tint = WHITE_TINT if ch.isupper() else BLACK_TINT
-    v = VALUE[ch.lower()]
-    return (v * tint[0], v * tint[1], v * tint[2])
+    return PIECE_COLOURS[ch]
 
 
 def render(board, highlight=None):
