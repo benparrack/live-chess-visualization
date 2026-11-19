@@ -5,6 +5,7 @@ Run every panel mode from one program and flip between them with the joystick.
 Modes, in order:
     colorchess    the featured Lichess TV game
     followchess   our own live game (FOLLOW_USERS in followchess.py)
+    openings      openings and famous games, one after another (openings_mode.py)
 
 Clicking the stick in opens the Bluetooth speaker screen: it searches, lists
 the speakers it found (one at a time, scrolling), and connects the one picked.
@@ -14,7 +15,7 @@ Usage:
 
 Joystick:
     left / right   previous / next mode
-    up / down      brightness
+    up / down      brightness (in the openings mode: next / previous opening)
     middle click   Bluetooth speakers (up / down to scroll, click to connect)
     middle hold    clear and quit (2s)
 """
@@ -26,10 +27,11 @@ import time
 import bluetooth_speakers
 import colorchess
 import followchess
+import openings_mode
 import panel
 import sound
 
-MODES = [colorchess.run_live, followchess.run_follow]
+MODES = [colorchess.run_live, followchess.run_follow, openings_mode.run_openings]
 mode_index = 0
 switching = False
 
@@ -72,6 +74,20 @@ def on_right(event):
         switch(1)
 
 
+def on_up(event):
+    if MODES[mode_index] is openings_mode.run_openings:
+        openings_mode.on_up(event)      # next opening
+    else:
+        panel.on_up(event)              # brightness
+
+
+def on_down(event):
+    if MODES[mode_index] is openings_mode.run_openings:
+        openings_mode.on_down(event)    # previous opening
+    else:
+        panel.on_down(event)
+
+
 def on_middle(event):
     # A click opens Bluetooth on release, so a long hold can mean quit instead.
     global pressed_at, switching
@@ -101,8 +117,8 @@ def routed(handler):
 # set after the imports above, which install their own handlers
 panel.sense.stick.direction_left = routed(on_left)
 panel.sense.stick.direction_right = routed(on_right)
-panel.sense.stick.direction_up = routed(panel.on_up)
-panel.sense.stick.direction_down = routed(panel.on_down)
+panel.sense.stick.direction_up = routed(on_up)
+panel.sense.stick.direction_down = routed(on_down)
 panel.sense.stick.direction_middle = routed(on_middle)
 
 
