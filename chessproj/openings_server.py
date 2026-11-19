@@ -18,7 +18,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import chess
 
-from panel import DARK_SQUARE, FLASH_TO, LIGHT_SQUARE, PIECE_COLOURS, scaled, sense
+from panel import DARK_SQUARE, FLASH_TO, LIGHT_SQUARE, PIECE_COLOURS, clear, scaled, show_still
 
 # ---------------------------------------------------------------- settings
 
@@ -809,6 +809,11 @@ START = board_chars(chess.Board())
 # ---------------------------------------------------------------- LEDs
 
 def render(board, highlight=None):
+    # a still frame, so joystick up/down redraws it at the new brightness right away
+    show_still(lambda: board_frame(board, highlight))
+
+
+def board_frame(board, highlight):
     pixels = []
     for i, ch in enumerate(board):
         row, col = divmod(i, 8)
@@ -822,7 +827,7 @@ def render(board, highlight=None):
         if board[frm] == ".":
             pixels[frm] = scaled(FLASH_FROM)
         pixels[to] = scaled(FLASH_TO)
-    sense.set_pixels(pixels)
+    return pixels
 
 
 # ---------------------------------------------------------------- player
@@ -927,7 +932,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send('{"ok":true}')
         elif self.path == "/api/clear":
             start_job(None)
-            sense.clear()
+            clear()
             set_state(opening=None, ply=0, total=0, playing=False,
                       board="." * 64, last=None)
             self.send('{"ok":true}')
@@ -1153,4 +1158,4 @@ if __name__ == "__main__":
         pass
     finally:
         start_job(None)
-        sense.clear()
+        clear()

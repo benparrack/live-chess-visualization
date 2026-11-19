@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import unittest
+from types import SimpleNamespace
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 os.environ.setdefault("SENSE_SIM_FD", str(os.open(os.devnull, os.O_WRONLY)))
@@ -98,6 +99,30 @@ class PanelTest(unittest.TestCase):
         self.assertEqual(panel.background(sum, [1, 2]), 3)
         with self.assertRaises(ZeroDivisionError):
             panel.background(divmod, 1, 0)
+
+    def brightness_press(self, handler):
+        level = panel.BRIGHTNESS
+        self.addCleanup(setattr, panel, "BRIGHTNESS", level)
+        handler(SimpleNamespace(action="pressed"))
+        return [list(p) for p in panel.sense.get_pixels()]
+
+    def test_brightness_redraws_the_board_without_waiting_for_a_move(self):
+        board = panel.expand_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w")
+        before = panel.render(board)
+        shown = self.brightness_press(panel.on_down)
+        self.assertEqual(shown, [list(p) for p in panel.scaled_board(board)])
+        self.assertLess(sum(map(sum, shown)), sum(map(sum, before)))
+
+    def test_brightness_keeps_the_game_over_marking(self):
+        board = panel.expand_fen("4k3/8/8/8/8/8/8/4K2q w")
+        panel.show_still(lambda: panel.defeated(board, True))
+        shown = self.brightness_press(panel.on_up)
+        self.assertEqual(shown[panel.king_square(board, True)], list(panel.scaled(panel.LOSS_COLOUR)))
+
+    def test_brightness_leaves_a_cleared_panel_blank(self):
+        panel.render(panel.expand_fen("8/8/8/8/8/8/8/K6k w"))
+        panel.clear()
+        self.assertEqual(self.brightness_press(panel.on_up), [[0, 0, 0]] * 64)
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ colorchess.py (Lichess TV) and followchess.py (follow a player) both build on
 this. Each sets its own left/right joystick handlers; up/down/middle live here.
 """
 
+import functools
 import math
 import queue
 import socket
@@ -70,6 +71,7 @@ sense.low_light = False   # keep the full range; scale in code instead
 restart_stream = False
 should_quit = False
 last_status = None   # status screen showing now; None while a board is up
+still = None   # redraws the settled frame on screen at a new brightness; None mid-animation
 draw_lock = threading.Lock()   # the status animation thread vs. everything else drawing
 
 
@@ -212,9 +214,15 @@ def path_between(frm, to):
 # ---------------------------------------------------------------- drawing
 
 def board_pixels(board):
-    global last_status
+    """The board's pixels, before an animation starts drawing it."""
+    global last_status, still
     with draw_lock:
         last_status = None   # stops the status animation before a board is drawn
+        still = None         # the frame on screen is about to change
+    return scaled_board(board)
+
+
+def scaled_board(board):
     pixels = []
     for i, ch in enumerate(board):
         row, col = divmod(i, 8)
@@ -228,9 +236,28 @@ def board_pixels(board):
 
 def render(board):
     """Build the 64 pixel list and push it to the panel."""
-    pixels = board_pixels(board)
-    sense.set_pixels(pixels)
+    return show_still(functools.partial(scaled_board, board))
+
+
+def show_still(frame):
+    """Draw frame() and keep it up: a brightness change redraws it right away
+    instead of at the next move. Returns the pixels drawn."""
+    global last_status, still
+    with draw_lock:
+        last_status = None
+        still = frame
+        pixels = frame()
+        sense.set_pixels(pixels)
     return pixels
+
+
+def set_brightness(level):
+    global BRIGHTNESS
+    with draw_lock:
+        BRIGHTNESS = level
+        if still:
+            sense.set_pixels(still())
+        # a status screen picks it up on its next frame; an animation, on its last
 
 
 # ---------------------------------------------------------------- animations
@@ -318,7 +345,7 @@ def show_move(old_board, board, move, white_next):
         shatter(pixels, to, captured)
     if in_check:
         pulse(pixels, [king_square(board, white_next)], CHECK_COLOUR, CHECK_PULSES, CHECK_SECONDS)
-    sense.set_pixels(pixels)
+    render(board)   # at the brightness now, in case it changed mid-animation
     return in_check
 
 
@@ -333,11 +360,14 @@ def new_game_reveal(board):
             frame[row * 8:row * 8 + 8] = target[row * 8:row * 8 + 8]
         sense.set_pixels(frame)
         time.sleep(0.09)
+    render(board)
 
 
 def show_game_over(board, status, winner):
     """Mark how the game ended on the final position, then hold it."""
-    pixels = render(board)
+    pixels = board_pixels(board)
+    sense.set_pixels(pixels)
+    final = functools.partial(scaled_board, board)
     if winner in ("white", "black"):
         sound.play("mate" if status == "mate" else "win")
         loser_white = winner == "black"
@@ -346,19 +376,26 @@ def show_game_over(board, status, winner):
             # slower and longer for an actual checkmate than a resign/timeout
             pulses, seconds = (4, 1.6) if status == "mate" else (2, 1.0)
             pulse(pixels, [loser], LOSS_COLOUR, pulses, seconds)
-        # The losing army dims so the winning side stands out; its king stays red.
-        final = list(pixels)
-        for i, ch in enumerate(board):
-            if ch != "." and ch.isupper() == loser_white:
-                final[i] = mix(pixels[i], OFF, 0.75)
-        if loser is not None:
-            final[loser] = scaled(LOSS_COLOUR)
-        crossfade(pixels, final, 0.6)
+        final = functools.partial(defeated, board, loser_white)
+        crossfade(pixels, final(), 0.6)
     elif status in ("draw", "stalemate"):
         sound.play("draw")
         kings = [i for i in (king_square(board, True), king_square(board, False)) if i is not None]
         pulse(pixels, kings, DRAW_COLOUR, 3, 1.2)
+    show_still(final)
     wait(END_HOLD_SECONDS)
+
+
+def defeated(board, loser_white):
+    """The losing army dims so the winning side stands out; its king goes red."""
+    pixels = scaled_board(board)
+    for i, ch in enumerate(board):
+        if ch != "." and ch.isupper() == loser_white:
+            pixels[i] = mix(pixels[i], OFF, 0.75)
+    loser = king_square(board, loser_white)
+    if loser is not None:
+        pixels[loser] = scaled(LOSS_COLOUR)
+    return pixels
 
 
 # ---------------------------------------------------------------- status screens
@@ -408,11 +445,12 @@ def draw_status():
 
 def show_status(kind):
     """Put up a status screen; it keeps animating until a board is drawn."""
-    global last_status
+    global last_status, still
     if kind == "offline" and last_status != "offline":
         sound.play("offline")   # once when the connection drops, not every retry
     with draw_lock:
         last_status = kind
+        still = None
         draw_status()
 
 
@@ -437,9 +475,9 @@ def wait(seconds, status=None):
 
 def clear():
     """Blank the panel for good, stopping any status animation first."""
-    global last_status
+    global last_status, still
     with draw_lock:
-        last_status = None
+        last_status = still = None
         sense.clear()
 
 
@@ -518,15 +556,13 @@ def read_lines(request, timeout):
 # ---------------------------------------------------------------- joystick
 
 def on_up(event):
-    global BRIGHTNESS
     if event.action == "pressed":
-        BRIGHTNESS = min(1.0, BRIGHTNESS + 0.15)
+        set_brightness(min(1.0, BRIGHTNESS + 0.15))
 
 
 def on_down(event):
-    global BRIGHTNESS
     if event.action == "pressed":
-        BRIGHTNESS = max(0.15, BRIGHTNESS - 0.15)
+        set_brightness(max(0.15, BRIGHTNESS - 0.15))
 
 
 def on_middle(event):
